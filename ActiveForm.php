@@ -2,11 +2,12 @@
 /**
  * @copyright Anton Tuyakhov <atuyakhov@gmail.com>
  */
+
 namespace tuyakhov\braintree;
 
 use Yii;
 
-class ActiveForm extends \yii\widgets\ActiveForm
+class ActiveForm extends \yii\bootstrap\ActiveForm
 {
     /**
      * @inheritdoc
@@ -21,5 +22,4 @@ class ActiveForm extends \yii\widgets\ActiveForm
         $view->registerJs("braintree.setup('$clientSideKey', 'custom', {id: '$id'});");
         $this->fieldClass = ActiveField::className();
     }
-
 }

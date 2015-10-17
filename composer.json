@@ -20,13 +20,18 @@
     "require": {
         "php": ">=5.4.0",
         "yiisoft/yii2": "*",
-        "npm-asset/braintree-web" : "2.10.*",
+        "yiisoft/yii2-bootstrap": "*",
+        "npm-asset/braintree-web" : "2.14.*",
         "braintree/braintree_php" : "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "4.8.*"
     },
     "autoload": {
         "psr-4": {
             "tuyakhov\\braintree\\": ""
         }
     },
-    "minimum-stability": "dev"
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }

@@ -1,12 +1,11 @@
 <?php
 /**
- * @author Anton Tuyakhov <atuyakhov@gmail.com>
+ * @copyright Anton Tuyakhov <atuyakhov@gmail.com>
  */
 
 namespace tuyakhov\braintree;
 
-
-class ActiveField extends \yii\widgets\ActiveField
+class ActiveField extends \yii\bootstrap\ActiveField
 {
     /**
      * @inheritdoc
@@ -32,6 +31,4 @@ class ActiveField extends \yii\widgets\ActiveField
         $config = array_merge(['options' => $this->inputOptions], $config);
         return parent::widget($class, $config);
     }
-
-
 }
