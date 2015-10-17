@@ -5,6 +5,8 @@
 
 namespace tuyakhov\braintree;
 
+use yii\helpers\Inflector;
+
 class ActiveField extends \yii\bootstrap\ActiveField
 {
     /**
@@ -18,7 +20,7 @@ class ActiveField extends \yii\bootstrap\ActiveField
             $inputName[0] = $inputName[1];
         }
         $this->inputOptions = array_merge([
-            'data-braintree-name' => $inputName[0],
+            'data-braintree-name' => Inflector::underScore($inputName[0]),
             'autocomplete' => 'off'
         ], $this->inputOptions);
     }
