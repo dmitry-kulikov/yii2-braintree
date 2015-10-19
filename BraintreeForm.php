@@ -1,9 +1,11 @@
 <?php
+/**
+ * @copyright Anton Tuyakhov <atuyakhov@gmail.com>
+ */
+
 namespace tuyakhov\braintree;
 
-use yii\base\InvalidCallException;
 use yii\base\Model;
-use yii\base\ModelEvent;
 
 class BraintreeForm extends Model
 {
@@ -213,17 +215,26 @@ class BraintreeForm extends Model
      */
     public function addErrorFromResponse($result)
     {
+        /** @var \Braintree_Error_ErrorCollection $errors */
+        $errors = $result->errors;
+        foreach ($errors->shallowAll() as $error) {
+            $this->addError('creditCard_number', $error->message);
+        }
+        /** @var \Braintree_Error_ValidationErrorCollection $transactionErrors */
+        $transactionErrors = $errors->forKey('transaction');
+
+        foreach ($transactionErrors->shallowAll() as $error) {
+            $this->addError('creditCard_number', $error->message);
+        }
         $values = $this->getValuesFromAttributes();
-        if (!empty($result->errors)) {
-            foreach (array_keys($values) as $key) {
-                $keyErrors = $result->errors->forKey($key);
-                if (isset($keyErrors)) {
-                    foreach ($keyErrors->shallowAll() as $error) {
-                        $this->addError(($key . '_' . $error->attribute), $error->message);
-                    }
+        foreach (array_keys($values) as $key) {
+            /** @var \Braintree_Error_ValidationErrorCollection $keyErrors */
+            $keyErrors = $transactionErrors->forKey($key);
+            if (isset($keyErrors)) {
+                foreach ($keyErrors->shallowAll() as $error) {
+                    $this->addError($key . '_' . $error->attribute, $error->message);
                 }
             }
         }
     }
-
 }

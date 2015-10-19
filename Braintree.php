@@ -2,6 +2,7 @@
 /**
  * @copyright Anton Tuyakhov <atuyakhov@gmail.com>
  */
+
 namespace tuyakhov\braintree;
 
 use yii\base\Component;
