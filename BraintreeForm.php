@@ -222,19 +222,23 @@ class BraintreeForm extends Model
         }
         /** @var \Braintree_Error_ValidationErrorCollection $transactionErrors */
         $transactionErrors = $errors->forKey('transaction');
-
-        foreach ($transactionErrors->shallowAll() as $error) {
-            $this->addError('creditCard_number', $error->message);
-        }
-        $values = $this->getValuesFromAttributes();
-        foreach (array_keys($values) as $key) {
-            /** @var \Braintree_Error_ValidationErrorCollection $keyErrors */
-            $keyErrors = $transactionErrors->forKey($key);
-            if (isset($keyErrors)) {
-                foreach ($keyErrors->shallowAll() as $error) {
-                    $this->addError($key . '_' . $error->attribute, $error->message);
+        if (isset($transactionErrors)) {
+            foreach ($transactionErrors->shallowAll() as $error) {
+                $this->addError('creditCard_number', $error->message);
+            }
+            $values = $this->getValuesFromAttributes();
+            foreach (array_keys($values) as $key) {
+                /** @var \Braintree_Error_ValidationErrorCollection $keyErrors */
+                $keyErrors = $transactionErrors->forKey($key);
+                if (isset($keyErrors)) {
+                    foreach ($keyErrors->shallowAll() as $error) {
+                        $this->addError($key . '_' . $error->attribute, $error->message);
+                    }
                 }
             }
+        }
+        if (!$this->hasErrors()) {
+            $this->addError('creditCard_number', $result->message);
         }
     }
 }
