@@ -32,32 +32,14 @@ class TestCase extends \PHPUnit_Framework_TestCase
      */
     protected function mockApplication($config = [], $appClass = '\yii\console\Application')
     {
+        $localConfigFile = __DIR__ . '/config/main-local.php';
         new $appClass(
             ArrayHelper::merge(
-                [
-                    'id' => 'testapp',
-                    'basePath' => __DIR__,
-                    'components' => [
-                        'braintree' => [
-                            'class' => 'tuyakhov\braintree\Braintree',
-                            'merchantId' => 'gbz2n5pjhctjsh8x',
-                            'publicKey' => 'xqcj5tzd4rrrmdt7',
-                            'privateKey' => 'd12cf2acdd73a23d20bc71ed2235c43e',
-                        ]
-                    ],
-                    'vendorPath' => $this->getVendorPath(),
-                ],
+                require(__DIR__ . '/config/main.php'),
+                is_file($localConfigFile) ? require($localConfigFile) : [],
                 $config
             )
         );
-    }
-
-    /**
-     * @return string vendor path.
-     */
-    protected function getVendorPath()
-    {
-        return dirname(dirname(__DIR__)) . '/vendor';
     }
 
     /**
