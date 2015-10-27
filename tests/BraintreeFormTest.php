@@ -11,33 +11,49 @@ use tuyakhov\braintree\BraintreeForm;
 class BraintreeFormTest extends TestCase
 {
     public static $customer;
+
     /**
+     * @param string $ccNumber
+     * @param string $cvv
+     * @param string $exp
      * @dataProvider validCreditCardProvider
      */
     public function testSingleCharge($ccNumber, $cvv, $exp)
     {
         $model = new BraintreeForm();
         $model->setScenario('sale');
-        $this->assertTrue($model->load([
-            'creditCard_number' => $ccNumber,
-            'creditCard_cvv' => $cvv,
-            'creditCard_expirationDate' => $exp
-        ], ''));
+        $this->assertTrue(
+            $model->load(
+                [
+                    'creditCard_number' => $ccNumber,
+                    'creditCard_cvv' => $cvv,
+                    'creditCard_expirationDate' => $exp,
+                ],
+                ''
+            )
+        );
         $model->amount = rand(1, 200);
         $this->assertNotFalse($model->send());
     }
 
     /**
+     * @param string $firstName
+     * @param string $lastName
      * @dataProvider customerProvider
      */
     public function testCustomerCreate($firstName, $lastName)
     {
         $model = new BraintreeForm();
         $model->setScenario('customer');
-        $this->assertTrue($model->load([
-            'customer_firstName' => $firstName,
-            'customer_lastName' => $lastName,
-        ], ''));
+        $this->assertTrue(
+            $model->load(
+                [
+                    'customer_firstName' => $firstName,
+                    'customer_lastName' => $lastName,
+                ],
+                ''
+            )
+        );
         $result = $model->send();
         $this->assertNotFalse($result);
         $this->assertArrayHasKey('result', $result);
@@ -47,18 +63,26 @@ class BraintreeFormTest extends TestCase
     }
 
     /**
-     * @depends testCustomerCreate
+     * @param string $ccNumber
+     * @param string $cvv
+     * @param string $exp
+     * @depends      testCustomerCreate
      * @dataProvider validCreditCardProvider
      */
     public function testCreditCardCreate($ccNumber, $cvv, $exp)
     {
         $model = new BraintreeForm();
         $model->setScenario('creditCard');
-        $this->assertTrue($model->load([
-            'creditCard_number' => $ccNumber,
-            'creditCard_cvv' => $cvv,
-            'creditCard_expirationDate' => $exp
-        ], ''));
+        $this->assertTrue(
+            $model->load(
+                [
+                    'creditCard_number' => $ccNumber,
+                    'creditCard_cvv' => $cvv,
+                    'creditCard_expirationDate' => $exp,
+                ],
+                ''
+            )
+        );
         $model->customerId = self::$customer->id;
         $this->assertNotFalse($model->send());
     }
@@ -73,10 +97,15 @@ class BraintreeFormTest extends TestCase
         $this->assertArrayHasKey(0, $customer->paymentMethods());
         $model = new BraintreeForm();
         $model->setScenario('saleFromVault');
-        $this->assertTrue($model->load([
-            'amount' => rand(1, 200),
-            'paymentMethodToken' => $customer->paymentMethods()[0]->token
-        ], ''));
+        $this->assertTrue(
+            $model->load(
+                [
+                    'amount' => rand(1, 200),
+                    'paymentMethodToken' => $customer->paymentMethods()[0]->token,
+                ],
+                ''
+            )
+        );
         $this->assertNotFalse($model->send());
     }
 
@@ -86,7 +115,7 @@ class BraintreeFormTest extends TestCase
             [
                 '5555555555554444',
                 '123',
-                '12/2020'
+                '12/2020',
             ]
         ];
     }
@@ -96,7 +125,7 @@ class BraintreeFormTest extends TestCase
         return [
             [
                 'Brad',
-                'Pitt'
+                'Pitt',
             ],
         ];
     }
