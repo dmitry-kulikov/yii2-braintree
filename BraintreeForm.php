@@ -51,6 +51,11 @@ class BraintreeForm extends Model
 
     public $customerId;
 
+    /**
+     * @var \Braintree\Result\Error last error from Braintree
+     */
+    public $lastError;
+
     public function rules()
     {
         return [
@@ -215,6 +220,7 @@ class BraintreeForm extends Model
      */
     public function addErrorFromResponse($result)
     {
+        $this->lastError = $result;
         /** @var \Braintree\Error\ErrorCollection $errors */
         $errors = $result->errors;
         foreach ($errors->shallowAll() as $error) {

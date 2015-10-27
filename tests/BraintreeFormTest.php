@@ -37,6 +37,31 @@ class BraintreeFormTest extends TestCase
     }
 
     /**
+     * @param string $ccNumber
+     * @param string $cvv
+     * @param string $exp
+     * @dataProvider invalidCreditCardProvider
+     */
+    public function testSingleChargeFail($ccNumber, $cvv, $exp)
+    {
+        $model = new BraintreeForm();
+        $model->setScenario('sale');
+        $this->assertTrue(
+            $model->load(
+                [
+                    'creditCard_number' => $ccNumber,
+                    'creditCard_cvv' => $cvv,
+                    'creditCard_expirationDate' => $exp,
+                ],
+                ''
+            )
+        );
+        $model->amount = 1;
+        $this->assertFalse($model->send());
+        $this->assertInstanceOf('\Braintree\Result\Error', $model->lastError);
+    }
+
+    /**
      * @param string $firstName
      * @param string $lastName
      * @dataProvider customerProvider
@@ -116,7 +141,7 @@ class BraintreeFormTest extends TestCase
                 '5555555555554444',
                 '123',
                 '12/2020',
-            ]
+            ],
         ];
     }
 
@@ -127,6 +152,13 @@ class BraintreeFormTest extends TestCase
                 'Brad',
                 'Pitt',
             ],
+        ];
+    }
+
+    public function invalidCreditCardProvider()
+    {
+        return [
+            'invalid card number' => ['0', '123', '12/2020'],
         ];
     }
 }
