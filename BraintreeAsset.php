@@ -13,5 +13,4 @@ class BraintreeAsset extends AssetBundle
     public $js = [
         'braintree.js',
     ];
-
 }
