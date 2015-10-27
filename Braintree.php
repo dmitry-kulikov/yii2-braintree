@@ -26,10 +26,13 @@ class Braintree extends Component
     {
         foreach (['merchantId', 'publicKey', 'privateKey', 'environment'] as $attribute) {
             if ($this->$attribute === null) {
-                throw new InvalidConfigException(strtr('"{class}::{attribute}" cannot be empty.', [
-                    '{class}' => static::className(),
-                    '{attribute}' => '$' . $attribute
-                ]));
+                throw new InvalidConfigException(strtr(
+                    '"{class}::{attribute}" cannot be empty.',
+                    [
+                        '{class}' => static::className(),
+                        '{attribute}' => '$' . $attribute
+                    ]
+                ));
             }
             \Braintree_Configuration::$attribute($this->$attribute);
         }
@@ -51,11 +54,31 @@ class Braintree extends Component
 
         if ($result->success) {
             return ['status' => true, 'result' => $result];
-        } else if ($result->transaction) {
-            return ['status' => false, 'result' => $result];
         } else {
-            return ['status' => false, 'result' => $result];
+            if ($result->transaction) {
+                return ['status' => false, 'result' => $result];
+            } else {
+                return ['status' => false, 'result' => $result];
+            }
         }
+    }
+
+    public function saleWithServiceFee($merchantAccountId, $amount, $paymentMethodNonce = null, $serviceFeeAmount)
+    {
+        $result = \Braintree_Transaction::sale(
+            [
+                'merchantAccountId' => $merchantAccountId,
+                'amount' => $amount,
+                'paymentMethodNonce' => $paymentMethodNonce,
+                'serviceFeeAmount' => $serviceFeeAmount
+            ]
+        );
+        return $result;
+    }
+
+    public function createPaymentMethodNonce($creditCardToken)
+    {
+        return \Braintree_PaymentMethodNonce::create($creditCardToken);
     }
 
     /**
@@ -84,6 +107,11 @@ class Braintree extends Component
         }
     }
 
+    public function createEmptyCustomer()
+    {
+        return \Braintree_Customer::createNoValidate();
+    }
+
     /**
      * This save credit cart to braintree
      * @return array
@@ -104,6 +132,13 @@ class Braintree extends Component
         } else {
             return ['status' => false, 'result' => $result];
         }
+    }
+
+    public function createCustomerCreditCard($params)
+    {
+        return \Braintree_CreditCard::create(
+            $params
+        )->creditCard;
     }
 
     public function saveAddress()
@@ -129,14 +164,27 @@ class Braintree extends Component
      * @param integer $expirationYear format: YYYY (use expirationMonth and expirationYear or expirationDate not both)
      * @param string $expirationDate format: MM/YYYY (use expirationMonth and expirationYear or expirationDate not both)
      */
-    public function setCreditCard($number, $cvv = null, $expirationMonth = null, $expirationYear = null, $expirationDate = null)
-    {
+    public function setCreditCard(
+        $number,
+        $cvv = null,
+        $expirationMonth = null,
+        $expirationYear = null,
+        $expirationDate = null
+    ) {
         $this->options['creditCard'] = [];
         $this->options['creditCard']['number'] = $number;
-        if (isset($cvv)) $this->options['creditCard']['cvv'] = $cvv;
-        if (isset($expirationMonth)) $this->options['creditCard']['expirationMonth'] = $expirationMonth;
-        if (isset($expirationYear)) $this->options['creditCard']['expirationYear'] = $expirationYear;
-        if (isset($expirationDate)) $this->options['creditCard']['expirationDate'] = $expirationDate;
+        if (isset($cvv)) {
+            $this->options['creditCard']['cvv'] = $cvv;
+        }
+        if (isset($expirationMonth)) {
+            $this->options['creditCard']['expirationMonth'] = $expirationMonth;
+        }
+        if (isset($expirationYear)) {
+            $this->options['creditCard']['expirationYear'] = $expirationYear;
+        }
+        if (isset($expirationDate)) {
+            $this->options['creditCard']['expirationDate'] = $expirationDate;
+        }
     }
 
     public function getCreditCard($input_values)
@@ -149,19 +197,27 @@ class Braintree extends Component
             'name' => null,
         ];
         $values = array_merge($default, $input_values);
-        $this->setCreditCard($values['number'], $values['cvv'], $values['expirationMonth'], $values['expirationYear'], $values['expirationDate'], $values['name']);
+        $this->setCreditCard(
+            $values['number'],
+            $values['cvv'],
+            $values['expirationMonth'],
+            $values['expirationYear'],
+            $values['expirationDate'],
+            $values['name']
+        );
     }
 
     public function getOptions($values)
     {
         if (!empty($values)) {
             foreach ($values as $key => $value) {
-                if ($key == 'amount')
+                if ($key == 'amount') {
                     $this->setAmount($values['amount']);
-                elseif ($key == 'creditCard')
+                } elseif ($key == 'creditCard') {
                     $this->getCreditCard($values['creditCard']);
-                else
+                } else {
                     $this->options[$key] = $value;
+                }
             }
         }
     }
@@ -173,5 +229,24 @@ class Braintree extends Component
     public function setAmount($amount)
     {
         $this->options['amount'] = round($amount, 2);
+    }
+
+    public function createMerchant($individualParams, $businessParams, $fundingParams, $tosAccepted, $id = null)
+    {
+        $params = [
+            'individual' => $individualParams,
+            'business' => $businessParams,
+            'funding' => $fundingParams,
+            'tosAccepted' => $tosAccepted,
+            'masterMerchantAccountId' => "masterMerchantAccount",
+            'id' => $id
+        ];
+
+        return \Braintree_MerchantAccount::create($params);
+    }
+
+    public function findMerchant($idMerchant)
+    {
+        return \Braintree_MerchantAccount::find($idMerchant);
     }
 }
