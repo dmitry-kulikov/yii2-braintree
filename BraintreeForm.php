@@ -211,16 +211,16 @@ class BraintreeForm extends Model
 
     /**
      * This add error from braintree response.
-     * @param $result \Braintree_Result_Error
+     * @param $result \Braintree\Result\Error
      */
     public function addErrorFromResponse($result)
     {
-        /** @var \Braintree_Error_ErrorCollection $errors */
+        /** @var \Braintree\Error\ErrorCollection $errors */
         $errors = $result->errors;
         foreach ($errors->shallowAll() as $error) {
             $this->addError('creditCard_number', $error->message);
         }
-        /** @var \Braintree_Error_ValidationErrorCollection $transactionErrors */
+        /** @var \Braintree\Error\ValidationErrorCollection $transactionErrors */
         $transactionErrors = $errors->forKey('transaction');
         if (isset($transactionErrors)) {
             foreach ($transactionErrors->shallowAll() as $error) {
@@ -228,7 +228,7 @@ class BraintreeForm extends Model
             }
             $values = $this->getValuesFromAttributes();
             foreach (array_keys($values) as $key) {
-                /** @var \Braintree_Error_ValidationErrorCollection $keyErrors */
+                /** @var \Braintree\Error\ValidationErrorCollection $keyErrors */
                 $keyErrors = $transactionErrors->forKey($key);
                 if (isset($keyErrors)) {
                     foreach ($keyErrors->shallowAll() as $error) {

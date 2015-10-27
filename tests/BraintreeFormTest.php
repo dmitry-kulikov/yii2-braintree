@@ -5,7 +5,7 @@
 
 namespace tuyakhov\braintree\tests;
 
-
+use Braintree\Customer;
 use tuyakhov\braintree\BraintreeForm;
 
 class BraintreeFormTest extends TestCase
@@ -68,7 +68,7 @@ class BraintreeFormTest extends TestCase
      */
     public function testTokenPayment()
     {
-        $customer = \Braintree_Customer::find(self::$customer->id);
+        $customer = Customer::find(self::$customer->id);
         $this->assertInstanceOf('\Braintree_Customer', $customer);
         $this->assertArrayHasKey(0, $customer->paymentMethods());
         $model = new BraintreeForm();

@@ -2,9 +2,9 @@
 /**
  * @author Anton Tuyakhov <atuyakhov@gmail.com>
  */
+
 namespace tuyakhov\braintree\tests;
 
-use yii\di\Container;
 use yii\helpers\ArrayHelper;
 use Yii;
 
