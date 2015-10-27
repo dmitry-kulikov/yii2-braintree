@@ -43,7 +43,7 @@ class BraintreeFormTest extends TestCase
         $this->assertArrayHasKey('result', $result);
         $this->assertObjectHasAttribute('customer', $result['result']);
         self::$customer = $result['result']->customer;
-        $this->assertInstanceOf('\Braintree_Customer', self::$customer);
+        $this->assertInstanceOf('\Braintree\Customer', self::$customer);
     }
 
     /**
@@ -69,7 +69,7 @@ class BraintreeFormTest extends TestCase
     public function testTokenPayment()
     {
         $customer = Customer::find(self::$customer->id);
-        $this->assertInstanceOf('\Braintree_Customer', $customer);
+        $this->assertInstanceOf('\Braintree\Customer', $customer);
         $this->assertArrayHasKey(0, $customer->paymentMethods());
         $model = new BraintreeForm();
         $model->setScenario('saleFromVault');
