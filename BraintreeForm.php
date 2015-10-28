@@ -5,11 +5,12 @@
 
 namespace tuyakhov\braintree;
 
+use Braintree\Exception;
+use Yii;
 use yii\base\Model;
 
 class BraintreeForm extends Model
 {
-
     public $amount;
     public $orderId;
     public $paymentMethodToken;
@@ -19,7 +20,7 @@ class BraintreeForm extends Model
     public $creditCard_expirationMonth;
     public $creditCard_expirationYear;
     public $creditCard_expirationDate;
-    public $creditCard_name;
+    public $creditCard_cardholderName;
 
     public $customer_firstName;
     public $customer_lastName;
@@ -62,14 +63,14 @@ class BraintreeForm extends Model
             [
                 ['customerId', 'creditCard_number', 'creditCard_cvv', 'creditCard_expirationDate'],
                 'required',
-                'on' => 'creditCard'
+                'on' => 'creditCard',
             ],
             [['customerId'], 'required', 'on' => 'address'],
             [['customer_firstName', 'customer_lastName'], 'required', 'on' => 'customer'],
             [
                 ['amount', 'creditCard_number', 'creditCard_cvv', 'creditCard_expirationDate'],
                 'required',
-                'on' => 'sale'
+                'on' => 'sale',
             ],
             [['amount', 'paymentMethodToken'], 'required', 'on' => 'saleFromVault'],
             [['amount'], 'double'],
@@ -102,9 +103,9 @@ class BraintreeForm extends Model
                     'shipping_locality',
                     'shipping_region',
                     'shipping_postalCode',
-                    'shipping_countryCodeAlpha2'
+                    'shipping_countryCodeAlpha2',
                 ],
-                'safe'
+                'safe',
             ],
         ];
     }
@@ -119,7 +120,7 @@ class BraintreeForm extends Model
             'creditCard_expirationMonth' => 'Expiration Month (MM)',
             'creditCard_expirationYear' => 'Expiration Year (YYYY)',
             'creditCard_expirationDate' => 'Expiration Date (MM/YYYY)',
-            'creditCard_name' => 'Name on Card',
+            'creditCard_cardholderName' => 'Name on Card',
             'customer_firstName' => 'First Name',
             'customer_lastName' => 'Last Name',
             'customer_company' => 'Company Name',
@@ -148,6 +149,15 @@ class BraintreeForm extends Model
         ];
     }
 
+    /**
+     * @return null|\tuyakhov\braintree\Braintree
+     * @throws \yii\base\InvalidConfigException
+     */
+    public static function getBraintree()
+    {
+        return Yii::$app->get('braintree');
+    }
+
     public function getValuesFromAttributes()
     {
         $values = array();
@@ -166,7 +176,7 @@ class BraintreeForm extends Model
 
     public function send()
     {
-        \Yii::$app->get('braintree')->getOptions($this->getValuesFromAttributes());
+        static::getBraintree()->getOptions($this->getValuesFromAttributes());
         $scenario = $this->getScenario();
         return $this->$scenario();
 
@@ -174,7 +184,7 @@ class BraintreeForm extends Model
 
     public function sale()
     {
-        $return = \Yii::$app->get('braintree')->singleCharge();
+        $return = static::getBraintree()->singleCharge();
         if ($return['status'] === false) {
             $this->addErrorFromResponse($return['result']);
             return false;
@@ -185,7 +195,7 @@ class BraintreeForm extends Model
 
     public function saleFromVault()
     {
-        $return = \Yii::$app->get('braintree')->singleCharge();
+        $return = static::getBraintree()->singleCharge();
         if ($return['status'] === false) {
             $this->addErrorFromResponse($return['result']);
             return false;
@@ -196,7 +206,7 @@ class BraintreeForm extends Model
 
     public function customer()
     {
-        $return = \Yii::$app->get('braintree')->saveCustomer();
+        $return = static::getBraintree()->saveCustomer();
         if ($return['status'] === false) {
             $this->addErrorFromResponse($return['result']);
             return false;
@@ -207,13 +217,13 @@ class BraintreeForm extends Model
 
     public function createEmptyCustomer()
     {
-        $result = \Yii::$app->get('braintree')->createEmptyCustomer();
+        $result = static::getBraintree()->createEmptyCustomer();
         return $result;
     }
 
     public function creditCard()
     {
-        $return = \Yii::$app->get('braintree')->saveCreditCard();
+        $return = static::getBraintree()->saveCreditCard();
         if ($return['status'] === false) {
             $this->addErrorFromResponse($return['result']);
             return false;
@@ -230,13 +240,13 @@ class BraintreeForm extends Model
             'number' => $cardNumber,
             'expirationDate' => $cardExpirationDate
         ];
-        $return = \Yii::$app->get('braintree')->createCustomerCreditCard($params);
+        $return = static::getBraintree()->createCustomerCreditCard($params);
         return $return;
     }
 
     public function address()
     {
-        $return = \Yii::$app->get('braintree')->saveAddress();
+        $return = static::getBraintree()->saveAddress();
         if ($return['status'] === false) {
             $this->addErrorFromResponse($return['result']);
             return false;
@@ -247,7 +257,7 @@ class BraintreeForm extends Model
 
     public function createMerchant($individualParams, $businessParams, $fundingParams, $tosAccepted, $id = null)
     {
-        $return = \Yii::$app->get('braintree')->createMerchant(
+        $return = static::getBraintree()->createMerchant(
             $individualParams,
             $businessParams,
             $fundingParams,
@@ -265,9 +275,9 @@ class BraintreeForm extends Model
     public function findMerchant($idMerchant)
     {
         try {
-            $return = \Yii::$app->get('braintree')->findMerchant($idMerchant);
+            $return = static::getBraintree()->findMerchant($idMerchant);
             return $return;
-        } catch (\Braintree_Exception $e) {
+        } catch (Exception $e) {
             return $e->getMessage();
         }
     }
@@ -275,7 +285,7 @@ class BraintreeForm extends Model
     public function saleWithServiceFee($merchantAccountId, $amount, $paymentMethodNonce, $serviceFeeAmount)
     {
         try {
-            $result = \Yii::$app->get('braintree')->saleWithServiceFee(
+            $result = static::getBraintree()->saleWithServiceFee(
                 $merchantAccountId,
                 $amount,
                 $paymentMethodNonce,
@@ -287,15 +297,14 @@ class BraintreeForm extends Model
                 $response = ['status' => $result->success, 'message' => $result->message];
                 return $response;
             }
-        } catch (\Braintree_Exception $e) {
+        } catch (Exception $e) {
             return $e->getMessage();
         }
     }
 
     public function createPaymentMethodNonce($creditCardToken)
     {
-
-        $result = \Yii::$app->get('braintree')->createPaymentMethodNonce($creditCardToken);
+        $result = static::getBraintree()->createPaymentMethodNonce($creditCardToken);
         if ($result->paymentMethodNonce->nonce) {
             return $result->paymentMethodNonce->nonce;
         } else {

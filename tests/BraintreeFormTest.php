@@ -16,9 +16,10 @@ class BraintreeFormTest extends TestCase
      * @param string $ccNumber
      * @param string $cvv
      * @param string $exp
+     * @param string $cardholderName
      * @dataProvider validCreditCardProvider
      */
-    public function testSingleCharge($ccNumber, $cvv, $exp)
+    public function testSingleCharge($ccNumber, $cvv, $exp, $cardholderName)
     {
         $model = new BraintreeForm();
         $model->setScenario('sale');
@@ -28,6 +29,7 @@ class BraintreeFormTest extends TestCase
                     'creditCard_number' => $ccNumber,
                     'creditCard_cvv' => $cvv,
                     'creditCard_expirationDate' => $exp,
+                    'creditCard_cardholderName' => $cardholderName,
                 ],
                 ''
             )
@@ -59,6 +61,7 @@ class BraintreeFormTest extends TestCase
         $model->amount = 1;
         $this->assertFalse($model->send());
         $this->assertInstanceOf('\Braintree\Result\Error', $model->lastError);
+        $this->assertInternalType('string', $model->lastError->message);
     }
 
     /**
@@ -91,10 +94,11 @@ class BraintreeFormTest extends TestCase
      * @param string $ccNumber
      * @param string $cvv
      * @param string $exp
+     * @param string $cardholderName
      * @depends      testCustomerCreate
      * @dataProvider validCreditCardProvider
      */
-    public function testCreditCardCreate($ccNumber, $cvv, $exp)
+    public function testCreditCardCreate($ccNumber, $cvv, $exp, $cardholderName)
     {
         $model = new BraintreeForm();
         $model->setScenario('creditCard');
@@ -104,6 +108,7 @@ class BraintreeFormTest extends TestCase
                     'creditCard_number' => $ccNumber,
                     'creditCard_cvv' => $cvv,
                     'creditCard_expirationDate' => $exp,
+                    'creditCard_cardholderName' => $cardholderName,
                 ],
                 ''
             )
@@ -141,6 +146,7 @@ class BraintreeFormTest extends TestCase
                 '5555555555554444',
                 '123',
                 '12/2020',
+                'BRAD PITT'
             ],
         ];
     }
