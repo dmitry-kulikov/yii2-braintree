@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Anton Tuyakhov <atuyakhov@gmail.com>
+ * @author Anton Tuyakhov <atuyakhov@gmail.com>
  */
 
 namespace tuyakhov\braintree;

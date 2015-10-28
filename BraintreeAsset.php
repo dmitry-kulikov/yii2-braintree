@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Anton Tuyakhov <atuyakhov@gmail.com>
+ * @author Anton Tuyakhov <atuyakhov@gmail.com>
  */
 
 namespace tuyakhov\braintree;
@@ -13,5 +13,4 @@ class BraintreeAsset extends AssetBundle
     public $js = [
         'braintree.js',
     ];
-
 }
