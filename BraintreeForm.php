@@ -80,6 +80,7 @@ class BraintreeForm extends Model
                     'creditCard_expirationMonth',
                     'creditCard_expirationYear',
                     'creditCard_expirationDate',
+                    'creditCard_cardholderName',
                     'customer_firstName',
                     'customer_lastName',
                     'customer_company',
