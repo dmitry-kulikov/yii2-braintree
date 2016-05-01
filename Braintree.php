@@ -86,6 +86,17 @@ class Braintree extends Component
         return $result;
     }
 
+    public function saleWithPaymentNonce($amount, $paymentMethodNonce)
+    {
+        $result = Transaction::sale(
+            [
+                'amount' => $amount,
+                'paymentMethodNonce' => $paymentMethodNonce,
+            ]
+        );
+        return $result;
+    }
+
     public function createPaymentMethodNonce($creditCardToken)
     {
         return PaymentMethodNonce::create($creditCardToken);
