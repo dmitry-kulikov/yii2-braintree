@@ -5,6 +5,14 @@
 
 namespace tuyakhov\braintree;
 
+use Braintree\Address;
+use Braintree\ClientToken;
+use Braintree\CreditCard;
+use Braintree\Configuration;
+use Braintree\Customer;
+use Braintree\MerchantAccount;
+use Braintree\PaymentMethodNonce;
+use Braintree\Transaction;
 use yii\base\Component;
 use yii\base\InvalidConfigException;
 
@@ -19,26 +27,31 @@ class Braintree extends Component
     public $options;
 
     /**
-     * Sets up Braintree configuration from config file
+     * Sets up Braintree configuration from config file.
      * @throws \yii\base\InvalidConfigException
      */
     public function init()
     {
         foreach (['merchantId', 'publicKey', 'privateKey', 'environment'] as $attribute) {
             if ($this->$attribute === null) {
-                throw new InvalidConfigException(strtr('"{class}::{attribute}" cannot be empty.', [
-                    '{class}' => static::className(),
-                    '{attribute}' => '$' . $attribute
-                ]));
+                throw new InvalidConfigException(
+                    strtr(
+                        '"{class}::{attribute}" cannot be empty.',
+                        [
+                            '{class}' => static::className(),
+                            '{attribute}' => '$' . $attribute,
+                        ]
+                    )
+                );
             }
-            \Braintree_Configuration::$attribute($this->$attribute);
+            Configuration::$attribute($this->$attribute);
         }
-        $this->clientSideKey = \Braintree_ClientToken::generate();
+        $this->clientSideKey = ClientToken::generate();
         parent::init();
     }
 
     /**
-     * Braintree sale function
+     * Braintree sale function.
      * @param bool|true $submitForSettlement
      * @param bool|true $storeInVaultOnSuccess
      * @return array
@@ -47,27 +60,58 @@ class Braintree extends Component
     {
         $this->options['options']['submitForSettlement'] = $submitForSettlement;
         $this->options['options']['storeInVaultOnSuccess'] = $storeInVaultOnSuccess;
-        $result = \Braintree_Transaction::sale($this->options);
+        $result = Transaction::sale($this->options);
 
         if ($result->success) {
             return ['status' => true, 'result' => $result];
-        } else if ($result->transaction) {
-            return ['status' => false, 'result' => $result];
         } else {
-            return ['status' => false, 'result' => $result];
+            if ($result->transaction) {
+                return ['status' => false, 'result' => $result];
+            } else {
+                return ['status' => false, 'result' => $result];
+            }
         }
     }
 
-    /**
-     * Finds transaction by id
-     */
-    public function findTransaction($id)
+    public function saleWithServiceFee($merchantAccountId, $amount, $paymentMethodNonce = null, $serviceFeeAmount)
     {
-        return \Braintree_Transaction::find($id);
+        $result = Transaction::sale(
+            [
+                'merchantAccountId' => $merchantAccountId,
+                'amount' => $amount,
+                'paymentMethodNonce' => $paymentMethodNonce,
+                'serviceFeeAmount' => $serviceFeeAmount,
+            ]
+        );
+        return $result;
+    }
+
+    public function saleWithPaymentNonce($amount, $paymentMethodNonce)
+    {
+        $result = Transaction::sale(
+            [
+                'amount' => $amount,
+                'paymentMethodNonce' => $paymentMethodNonce,
+            ]
+        );
+        return $result;
+    }
+
+    public function createPaymentMethodNonce($creditCardToken)
+    {
+        return PaymentMethodNonce::create($creditCardToken);
     }
 
     /**
-     * This save customer to braintree and returns result array
+     * Finds transaction by id.
+     */
+    public function findTransaction($id)
+    {
+        return Transaction::find($id);
+    }
+
+    /**
+     * This save customer to braintree and returns result array.
      * @return array
      */
     public function saveCustomer()
@@ -75,7 +119,7 @@ class Braintree extends Component
         if (isset($this->options['customerId'])) {
             $this->options['customer']['id'] = $this->options['customerId'];
         }
-        $result = \Braintree_Customer::create($this->options['customer']);
+        $result = Customer::create($this->options['customer']);
 
         if ($result->success) {
             return ['status' => true, 'result' => $result];
@@ -84,20 +128,25 @@ class Braintree extends Component
         }
     }
 
+    public function createEmptyCustomer()
+    {
+        return Customer::createNoValidate();
+    }
+
     /**
-     * This save credit cart to braintree
+     * This save credit cart to braintree.
      * @return array
      */
     public function saveCreditCard()
     {
-        $send_array = $this->options['creditCard'];
+        $sendArray = $this->options['creditCard'];
         if (isset($this->options['billing'])) {
-            $send_array['billingAddress'] = $this->options['billing'];
+            $sendArray['billingAddress'] = $this->options['billing'];
         }
         if (isset($this->options['customerId'])) {
-            $send_array['customerId'] = $this->options['customerId'];
+            $sendArray['customerId'] = $this->options['customerId'];
         }
-        $result = \Braintree_CreditCard::create($send_array);
+        $result = CreditCard::create($sendArray);
 
         if ($result->success) {
             return ['status' => true, 'result' => $result];
@@ -106,13 +155,18 @@ class Braintree extends Component
         }
     }
 
+    public function createCustomerCreditCard($params)
+    {
+        return CreditCard::create($params)->creditCard;
+    }
+
     public function saveAddress()
     {
-        $send_array = $this->options['billing'];
+        $sendArray = $this->options['billing'];
         if (isset($this->options['customerId'])) {
-            $send_array['customerId'] = $this->options['customerId'];
+            $sendArray['customerId'] = $this->options['customerId'];
         }
-        $result = \Braintree_Address::create($send_array);
+        $result = Address::create($sendArray);
 
         if ($result->success) {
             return ['status' => true, 'result' => $result];
@@ -122,56 +176,101 @@ class Braintree extends Component
     }
 
     /**
-     * Constructs the Credit Card array for payment
+     * Constructs the Credit Card array for payment.
      * @param integer $number Credit Card Number
-     * @param integer $cvv (optional)Credit Card Security code
+     * @param integer $cvv (optional) Credit Card Security code
      * @param integer $expirationMonth format: MM (use expirationMonth and expirationYear or expirationDate not both)
      * @param integer $expirationYear format: YYYY (use expirationMonth and expirationYear or expirationDate not both)
      * @param string $expirationDate format: MM/YYYY (use expirationMonth and expirationYear or expirationDate not both)
+     * @param string $cardholderName the cardholder name associated with the credit card
      */
-    public function setCreditCard($number, $cvv = null, $expirationMonth = null, $expirationYear = null, $expirationDate = null)
-    {
+    public function setCreditCard(
+        $number,
+        $cvv = null,
+        $expirationMonth = null,
+        $expirationYear = null,
+        $expirationDate = null,
+        $cardholderName = null
+    ) {
         $this->options['creditCard'] = [];
         $this->options['creditCard']['number'] = $number;
-        if (isset($cvv)) $this->options['creditCard']['cvv'] = $cvv;
-        if (isset($expirationMonth)) $this->options['creditCard']['expirationMonth'] = $expirationMonth;
-        if (isset($expirationYear)) $this->options['creditCard']['expirationYear'] = $expirationYear;
-        if (isset($expirationDate)) $this->options['creditCard']['expirationDate'] = $expirationDate;
+        if (isset($cvv)) {
+            $this->options['creditCard']['cvv'] = $cvv;
+        }
+        if (isset($expirationMonth)) {
+            $this->options['creditCard']['expirationMonth'] = $expirationMonth;
+        }
+        if (isset($expirationYear)) {
+            $this->options['creditCard']['expirationYear'] = $expirationYear;
+        }
+        if (isset($expirationDate)) {
+            $this->options['creditCard']['expirationDate'] = $expirationDate;
+        }
+        if (isset($cardholderName)) {
+            $this->options['creditCard']['cardholderName'] = $cardholderName;
+        }
     }
 
-    public function getCreditCard($input_values)
+    public function getCreditCard($inputValues)
     {
         $default = [
             'cvv' => null,
             'expirationMonth' => null,
             'expirationYear' => null,
             'expirationDate' => null,
-            'name' => null,
+            'cardholderName' => null,
         ];
-        $values = array_merge($default, $input_values);
-        $this->setCreditCard($values['number'], $values['cvv'], $values['expirationMonth'], $values['expirationYear'], $values['expirationDate'], $values['name']);
+        $values = array_merge($default, $inputValues);
+        $this->setCreditCard(
+            $values['number'],
+            $values['cvv'],
+            $values['expirationMonth'],
+            $values['expirationYear'],
+            $values['expirationDate'],
+            $values['cardholderName']
+        );
     }
 
     public function getOptions($values)
     {
         if (!empty($values)) {
             foreach ($values as $key => $value) {
-                if ($key == 'amount')
+                if ($key == 'amount') {
                     $this->setAmount($values['amount']);
-                elseif ($key == 'creditCard')
+                } elseif ($key == 'creditCard') {
                     $this->getCreditCard($values['creditCard']);
-                else
+                } else {
                     $this->options[$key] = $value;
+                }
             }
         }
     }
 
     /**
-     * Set the amount to charge
-     * @param float $amount No dollar sign needed
+     * Set the amount to charge.
+     * @param float $amount no dollar sign needed
      */
     public function setAmount($amount)
     {
         $this->options['amount'] = round($amount, 2);
+    }
+
+    public function createMerchant($individualParams, $businessParams, $fundingParams, $tosAccepted, $id = null)
+    {
+        $params = [
+            'individual' => $individualParams,
+            'business' => $businessParams,
+            'funding' => $fundingParams,
+            'tosAccepted' => $tosAccepted,
+            'masterMerchantAccountId' => "masterMerchantAccount",
+            'id' => $id,
+        ];
+
+        return MerchantAccount::create($params);
+    }
+
+    public function findMerchant($idMerchant)
+    {
+        return MerchantAccount::find($idMerchant);
     }
 }
