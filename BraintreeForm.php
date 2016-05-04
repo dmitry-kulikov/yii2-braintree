@@ -275,31 +275,22 @@ class BraintreeForm extends Model
 
     public function findMerchant($idMerchant)
     {
-        try {
-            $return = static::getBraintree()->findMerchant($idMerchant);
-            return $return;
-        } catch (Exception $e) {
-            return $e->getMessage();
-        }
+        return static::getBraintree()->findMerchant($idMerchant);
     }
 
     public function saleWithServiceFee($merchantAccountId, $amount, $paymentMethodNonce, $serviceFeeAmount)
     {
-        try {
-            $result = static::getBraintree()->saleWithServiceFee(
-                $merchantAccountId,
-                $amount,
-                $paymentMethodNonce,
-                $serviceFeeAmount
-            );
-            if ($result->success) {
-                return $result;
-            } else {
-                $response = ['status' => $result->success, 'message' => $result->message];
-                return $response;
-            }
-        } catch (Exception $e) {
-            return $e->getMessage();
+        $result = static::getBraintree()->saleWithServiceFee(
+            $merchantAccountId,
+            $amount,
+            $paymentMethodNonce,
+            $serviceFeeAmount
+        );
+        if ($result->success) {
+            return $result;
+        } else {
+            $response = ['status' => $result->success, 'message' => $result->message];
+            return $response;
         }
     }
 
