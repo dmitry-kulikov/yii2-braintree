@@ -92,6 +92,10 @@ class Braintree extends Component
             [
                 'amount' => $amount,
                 'paymentMethodNonce' => $paymentMethodNonce,
+  		'options' => [
+                    'submitForSettlement' => true,
+                    'storeInVaultOnSuccess' => true,
+                ],
             ]
         );
         return $result;

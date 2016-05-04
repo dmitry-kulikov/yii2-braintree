@@ -305,16 +305,12 @@ class BraintreeForm extends Model
 
     public function saleWithPaymentNonce($amount, $paymentMethodNonce)
     {
-        try {
-            $result = static::getBraintree()->saleWithPaymentNonce($amount, $paymentMethodNonce);
-            if ($result->success) {
-                return ['result' => $result];
-            } else {
-                $response = ['status' => $result->success, 'message' => $result->message];
-                return $response;
-            }
-        } catch (Exception $e) {
-            return $e->getMessage();
+        $result = static::getBraintree()->saleWithPaymentNonce($amount, $paymentMethodNonce);
+        if ($result->success) {
+            return ['result' => $result];
+        } else {
+            $response = ['status' => $result->success, 'message' => $result->message];
+            return $response;
         }
     }
 
