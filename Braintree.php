@@ -92,7 +92,7 @@ class Braintree extends Component
             [
                 'amount' => $amount,
                 'paymentMethodNonce' => $paymentMethodNonce,
-  		'options' => [
+                'options' => [
                     'submitForSettlement' => true,
                     'storeInVaultOnSuccess' => true,
                 ],

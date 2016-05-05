@@ -21,7 +21,7 @@ class ActiveField extends \yii\bootstrap\ActiveField
         }
         $this->inputOptions = array_merge(
             [
-                'data-braintree-name' => Inflector::underScore($inputName[0]),
+                'data-braintree-name' => Inflector::underscore($inputName[0]),
                 'autocomplete' => 'off',
             ],
             $this->inputOptions
