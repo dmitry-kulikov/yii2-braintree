@@ -12,6 +12,8 @@ use Braintree\Configuration;
 use Braintree\Customer;
 use Braintree\MerchantAccount;
 use Braintree\PaymentMethodNonce;
+use Braintree\Plan;
+use Braintree\Subscription;
 use Braintree\Transaction;
 use yii\base\Component;
 use yii\base\InvalidConfigException;
@@ -273,8 +275,78 @@ class Braintree extends Component
         return MerchantAccount::create($params);
     }
 
+    public static function getAllPlans()
+    {
+        return Plan::all();
+    }
+
+    public static function getPlanIds()
+    {
+        $plans = static::getAllPlans();
+        $planIds = [];
+        foreach ($plans as $plan) {
+            $planIds[] = $plan->id;
+        }
+        return $planIds;
+    }
+
+    public static function getPlanById($planId)
+    {
+        $plans = static::getAllPlans();
+        foreach ($plans as $key => $plan) {
+            if ($plan->id == $planId) {
+                return $plans[$key];
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Create subscription.
+     * @param array $params
+     */
+    public function createSubscription($params)
+    {
+        return Subscription::create($params);
+    }
+
+    /**
+     * Create customer with payment method.
+     * @param string $firstName
+     * @param string $lastName
+     * @param string $paymentNonce
+     */
+    public static function createCustomerWithPaymentMethod($firstName, $lastName, $paymentNonce)
+    {
+        return Customer::create([
+            'firstName' => $firstName,
+            'lastName' => $lastName,
+            'paymentMethodNonce' => $paymentNonce
+        ]);
+    }
+
     public function findMerchant($idMerchant)
     {
         return MerchantAccount::find($idMerchant);
+    }
+
+    public function findSubscription($idSubscription)
+    {
+        return Subscription::find($idSubscription);
+    }
+
+    public function findCustomer($idCustomer)
+    {
+        return Customer::find($idCustomer);
+    }
+
+    /**
+     * Update subscription.
+     * @param string $idSubscription required
+     * @param array $params
+     */
+    public function updateSubscription($idSubscription, $params)
+    {
+        return Subscription::update($idSubscription, $params);
     }
 }

@@ -6,6 +6,7 @@
 namespace tuyakhov\braintree;
 
 use Braintree\Exception;
+use Braintree\Exception\NotFound as Braintree_Exception_NotFound;
 use Yii;
 use yii\base\Model;
 
@@ -315,6 +316,107 @@ class BraintreeForm extends Model
         }
     }
 
+    public function createCustomerWithPaymentMethod($paymentNonce)
+    {
+        $result = static::getBraintree()->createCustomerWithPaymentMethod(
+            $this->customer_firstName,
+            $this->customer_lastName,
+            $paymentNonce
+        );
+
+        if ($result->success) {
+            return [
+                'status' => true,
+                'result' => $result,
+                'customerId' => $result->customer->id,
+                'paymentMethodToken' => $result->customer->paymentMethods[0]->token
+            ];
+        } else {
+            return ['status' => false, 'result' => $result];
+        }
+    }
+
+    public static function getAllPlans()
+    {
+        return static::getBraintree()->getAllPlans();
+    }
+
+    public static function getPlanIds()
+    {
+        return static::getBraintree()->getPlanIds();
+    }
+
+    public static function getPlanById($planId)
+    {
+        return static::getBraintree()->getPlanById($planId);
+    }
+
+    public function createSubscription($planId, $params=[])
+    {
+        $params = array_merge(['paymentMethodToken' => $this->paymentMethodToken, 'planId' => $planId], $params);
+        $result = static::getBraintree()->createSubscription($params);
+        if ($result->success) {
+            return [
+                'status' => true,
+                'result' => $result,
+                'subscriptionId' => $result->subscription->id
+            ];
+        } else {
+            return ['status' => false, 'result' => $result];
+        }
+    }
+
+    public function findSubscription($idSubscription)
+    {
+        try {
+            $result = static::getBraintree()->findSubscription($idSubscription);
+            return [
+                    'status' => true,
+                    'result' => $result,
+                ];
+        } catch (Braintree_Exception_NotFound $e) {
+            $message = $e->getMessage();
+        } catch (\Exception $e) {
+            $message = $e->getMessage();
+        }
+        return ['status' => false, 'result' => [], 'message' => $message];
+    }
+
+    public function findCustomer($idCustomer)
+    {
+        try {
+            $result = static::getBraintree()->findCustomer($idCustomer);
+            return [
+                'status' => true,
+                'result' => $result,
+            ];
+        } catch (Braintree_Exception_NotFound $e) {
+            $message = $e->getMessage();
+        } catch (\Exception $e) {
+            $message = $e->getMessage();
+        }
+        return ['status' => false, 'result' => [], 'message' => $message];
+    }
+
+    public function updateSubscription($idSubscription, $params)
+    {
+        try {
+            $result = static::getBraintree()->updateSubscription($idSubscription, $params);
+            if ($result->success) {
+                return [
+                    'status' => true,
+                    'result' => $result,
+                ];
+            } else {
+                return ['status' => false, 'result' => $result];
+            }
+        } catch (Braintree_Exception_NotFound $e) {
+            $message = $e->getMessage();
+        } catch (\Exception $e) {
+            $message = $e->getMessage();
+        }
+        return ['status' => false, 'result' => [], 'message' => $message];
+    }
 
     /**
      * This add error from braintree response.
