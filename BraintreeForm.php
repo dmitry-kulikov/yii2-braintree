@@ -389,6 +389,8 @@ class BraintreeForm extends Model
             return [
                 'status' => true,
                 'result' => $result,
+                'customerId' => $result->id,
+                'paymentMethodToken' => $result->paymentMethods[0]->token
             ];
         } catch (Braintree_Exception_NotFound $e) {
             $message = $e->getMessage();
@@ -417,6 +419,27 @@ class BraintreeForm extends Model
         }
         return ['status' => false, 'result' => [], 'message' => $message];
     }
+
+    public function cancelSubscription($idSubscription)
+    {
+        try {
+            $result = static::getBraintree()->cancelSubscription($idSubscription);
+            if ($result->success) {
+                return [
+                    'status' => true,
+                    'result' => $result,
+                ];
+            } else {
+                return ['status' => false, 'result' => $result];
+            }
+        } catch (Braintree_Exception_NotFound $e) {
+            $message = $e->getMessage();
+        } catch (\Exception $e) {
+            $message = $e->getMessage();
+        }
+        return ['status' => false, 'result' => [], 'message' => $message];
+    }
+
 
     /**
      * This add error from braintree response.

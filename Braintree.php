@@ -349,4 +349,13 @@ class Braintree extends Component
     {
         return Subscription::update($idSubscription, $params);
     }
+
+    /**
+     * Cancel subscription.
+     * @param string $idSubscription required
+     */
+    public function cancelSubscription($idSubscription)
+    {
+        return Subscription::cancel($idSubscription);
+    }
 }
