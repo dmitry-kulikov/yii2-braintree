@@ -12,6 +12,7 @@ use Braintree\Configuration;
 use Braintree\Customer;
 use Braintree\MerchantAccount;
 use Braintree\PaymentMethodNonce;
+use Braintree\PaymentMethod;
 use Braintree\Plan;
 use Braintree\Transaction;
 use yii\base\Component;
@@ -106,6 +107,15 @@ class Braintree extends Component
     public function createPaymentMethodNonce($creditCardToken)
     {
         return PaymentMethodNonce::create($creditCardToken);
+    }
+
+    public function createPaymentMethod($customerId, $paymentNonce, $options)
+    {
+        return PaymentMethod::create([
+            'customerId' => $customerId,
+            'paymentMethodNonce' => $paymentNonce,
+            'options' => $options
+        ]);
     }
 
     /**

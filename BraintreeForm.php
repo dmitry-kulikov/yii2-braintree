@@ -314,6 +314,24 @@ class BraintreeForm extends Model
         }
     }
 
+    public function createPaymentMethod($customerId, $paymentNonce, $makeDefault = false, $options = [])
+    {
+        if ($makeDefault) {
+            $options = array_merge($options,['makeDefault' => $makeDefault]);
+        }
+        $result = static::getBraintree()->createPaymentMethod($customerId, $paymentNonce, $options);
+        $status = false;
+        if ($result->success) {
+            $status = true;
+        } else {
+            $this->addErrorFromResponse($result);
+        }
+        return [
+            'status' => $status,
+            'result' => $result
+        ];
+    }
+
     /**
      * @param string $paymentNonce
      * @return array
