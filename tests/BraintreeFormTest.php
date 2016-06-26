@@ -7,6 +7,8 @@ namespace tuyakhov\braintree\tests;
 
 use Braintree\Customer;
 use tuyakhov\braintree\BraintreeForm;
+use Yii;
+use yii\helpers\ArrayHelper;
 
 class BraintreeFormTest extends TestCase
 {
@@ -137,6 +139,26 @@ class BraintreeFormTest extends TestCase
             )
         );
         $this->assertNotFalse($model->send());
+    }
+
+    public function testGetAllPlans()
+    {
+        $model = new BraintreeForm();
+        $plans = $model->getAllPlans();
+        $this->assertInternalType('array', $plans);
+        foreach ($plans as $plan) {
+            $this->assertInstanceOf('Braintree\Plan', $plan);
+        }
+    }
+
+    public function testFindMerchant()
+    {
+        $idMerchant = ArrayHelper::getValue(Yii::$app->params, 'merchant_account_id');
+        if (!isset($idMerchant)) {
+            $this->markTestSkipped('Valid "merchant_account_id" should be specified in tests/config/params-local.php.');
+        }
+        $model = new BraintreeForm();
+        $this->assertInstanceOf('Braintree\MerchantAccount', $model->findMerchant($idMerchant));
     }
 
     public function validCreditCardProvider()

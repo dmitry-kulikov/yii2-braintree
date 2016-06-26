@@ -13,10 +13,10 @@ use Braintree\Customer;
 use Braintree\MerchantAccount;
 use Braintree\PaymentMethodNonce;
 use Braintree\Plan;
-use Braintree\Subscription;
 use Braintree\Transaction;
 use yii\base\Component;
 use yii\base\InvalidConfigException;
+use yii\helpers\ArrayHelper;
 
 class Braintree extends Component
 {
@@ -26,7 +26,7 @@ class Braintree extends Component
     public $privateKey;
     public $clientSideKey;
 
-    public $options;
+    protected $options;
 
     /**
      * Sets up Braintree configuration from config file.
@@ -110,6 +110,8 @@ class Braintree extends Component
 
     /**
      * Finds transaction by id.
+     * @param string $id
+     * @return Transaction
      */
     public function findTransaction($id)
     {
@@ -132,11 +134,6 @@ class Braintree extends Component
         } else {
             return ['status' => false, 'result' => $result];
         }
-    }
-
-    public function createEmptyCustomer()
-    {
-        return Customer::createNoValidate();
     }
 
     /**
@@ -183,68 +180,38 @@ class Braintree extends Component
 
     /**
      * Constructs the Credit Card array for payment.
-     * @param integer $number Credit Card Number
-     * @param integer $cvv (optional) Credit Card Security code
-     * @param integer $expirationMonth format: MM (use expirationMonth and expirationYear or expirationDate not both)
-     * @param integer $expirationYear format: YYYY (use expirationMonth and expirationYear or expirationDate not both)
-     * @param string $expirationDate format: MM/YYYY (use expirationMonth and expirationYear or expirationDate not both)
-     * @param string $cardholderName the cardholder name associated with the credit card
+     * @param array $values array containing Credit Card values, the following keys are expected:
+     *     integer 'number' (required) Credit Card Number
+     *     integer 'cvv' (optional) Credit Card Security code
+     *     integer 'expirationMonth' (optional) format: MM
+     *         (use expirationMonth and expirationYear or expirationDate, not both)
+     *     integer 'expirationYear' (optional) format: YYYY
+     *         (use expirationMonth and expirationYear or expirationDate, not both)
+     *     string 'expirationDate' (optional) format: MM/YYYY
+     *         (use expirationMonth and expirationYear or expirationDate, not both)
+     *     string 'cardholderName' (optional) the cardholder name associated with the credit card
      */
-    public function setCreditCard(
-        $number,
-        $cvv = null,
-        $expirationMonth = null,
-        $expirationYear = null,
-        $expirationDate = null,
-        $cardholderName = null
-    ) {
-        $this->options['creditCard'] = [];
-        $this->options['creditCard']['number'] = $number;
-        if (isset($cvv)) {
-            $this->options['creditCard']['cvv'] = $cvv;
-        }
-        if (isset($expirationMonth)) {
-            $this->options['creditCard']['expirationMonth'] = $expirationMonth;
-        }
-        if (isset($expirationYear)) {
-            $this->options['creditCard']['expirationYear'] = $expirationYear;
-        }
-        if (isset($expirationDate)) {
-            $this->options['creditCard']['expirationDate'] = $expirationDate;
-        }
-        if (isset($cardholderName)) {
-            $this->options['creditCard']['cardholderName'] = $cardholderName;
-        }
-    }
-
-    public function getCreditCard($inputValues)
+    public function setCreditCard($values)
     {
-        $default = [
-            'cvv' => null,
-            'expirationMonth' => null,
-            'expirationYear' => null,
-            'expirationDate' => null,
-            'cardholderName' => null,
-        ];
-        $values = array_merge($default, $inputValues);
-        $this->setCreditCard(
-            $values['number'],
-            $values['cvv'],
-            $values['expirationMonth'],
-            $values['expirationYear'],
-            $values['expirationDate'],
-            $values['cardholderName']
-        );
+        $creditCard = ['number' => $values['number']];
+        $optionalParamNames = ['cvv', 'expirationMonth', 'expirationYear', 'expirationDate', 'cardholderName'];
+        foreach ($optionalParamNames as $optionalParamName) {
+            $optionalValue = ArrayHelper::getValue($values, $optionalParamName);
+            if (isset($optionalValue)) {
+                $creditCard[$optionalParamName] = $optionalValue;
+            }
+        }
+        $this->options['creditCard'] = $creditCard;
     }
 
-    public function getOptions($values)
+    public function setOptions($values)
     {
         if (!empty($values)) {
             foreach ($values as $key => $value) {
                 if ($key == 'amount') {
                     $this->setAmount($values['amount']);
                 } elseif ($key == 'creditCard') {
-                    $this->getCreditCard($values['creditCard']);
+                    $this->setCreditCard($values['creditCard']);
                 } else {
                     $this->options[$key] = $value;
                 }
@@ -275,11 +242,17 @@ class Braintree extends Component
         return MerchantAccount::create($params);
     }
 
+    /**
+     * @return Plan[]
+     */
     public static function getAllPlans()
     {
         return Plan::all();
     }
 
+    /**
+     * @return array
+     */
     public static function getPlanIds()
     {
         $plans = static::getAllPlans();
@@ -290,72 +263,36 @@ class Braintree extends Component
         return $planIds;
     }
 
+    /**
+     * @param string $planId
+     * @return Plan|null
+     */
     public static function getPlanById($planId)
     {
         $plans = static::getAllPlans();
-        foreach ($plans as $key => $plan) {
+        foreach ($plans as $plan) {
             if ($plan->id == $planId) {
-                return $plans[$key];
+                return $plan;
             }
         }
         return null;
     }
 
     /**
-     * Create subscription.
-     * @param array $params
+     * @param string $idMerchant
+     * @return MerchantAccount
      */
-    public function createSubscription($params)
-    {
-        return Subscription::create($params);
-    }
-
-    /**
-     * Create customer with payment method.
-     * @param string $firstName
-     * @param string $lastName
-     * @param string $paymentNonce
-     */
-    public static function createCustomerWithPaymentMethod($firstName, $lastName, $paymentNonce)
-    {
-        return Customer::create([
-            'firstName' => $firstName,
-            'lastName' => $lastName,
-            'paymentMethodNonce' => $paymentNonce
-        ]);
-    }
-
     public function findMerchant($idMerchant)
     {
         return MerchantAccount::find($idMerchant);
     }
 
-    public function findSubscription($idSubscription)
-    {
-        return Subscription::find($idSubscription);
-    }
-
+    /**
+     * @param string $idCustomer
+     * @return Customer
+     */
     public function findCustomer($idCustomer)
     {
         return Customer::find($idCustomer);
-    }
-
-    /**
-     * Update subscription.
-     * @param string $idSubscription required
-     * @param array $params
-     */
-    public function updateSubscription($idSubscription, $params)
-    {
-        return Subscription::update($idSubscription, $params);
-    }
-
-    /**
-     * Cancel subscription.
-     * @param string $idSubscription required
-     */
-    public function cancelSubscription($idSubscription)
-    {
-        return Subscription::cancel($idSubscription);
     }
 }

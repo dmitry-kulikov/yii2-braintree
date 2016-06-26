@@ -6,7 +6,7 @@
 namespace tuyakhov\braintree;
 
 use Braintree\Exception;
-use Braintree\Exception\NotFound as Braintree_Exception_NotFound;
+use Braintree\Exception\NotFound;
 use Yii;
 use yii\base\Model;
 
@@ -178,7 +178,7 @@ class BraintreeForm extends Model
 
     public function send()
     {
-        static::getBraintree()->getOptions($this->getValuesFromAttributes());
+        static::getBraintree()->setOptions($this->getValuesFromAttributes());
         $scenario = $this->getScenario();
         return $this->$scenario();
 
@@ -215,12 +215,6 @@ class BraintreeForm extends Model
         } else {
             return $return;
         }
-    }
-
-    public function createEmptyCustomer()
-    {
-        $result = static::getBraintree()->createEmptyCustomer();
-        return $result;
     }
 
     public function creditCard()
@@ -274,6 +268,10 @@ class BraintreeForm extends Model
         }
     }
 
+    /**
+     * @param string $idMerchant
+     * @return \Braintree\MerchantAccount
+     */
     public function findMerchant($idMerchant)
     {
         return static::getBraintree()->findMerchant($idMerchant);
@@ -316,72 +314,100 @@ class BraintreeForm extends Model
         }
     }
 
+    /**
+     * @param string $paymentNonce
+     * @return array
+     */
     public function createCustomerWithPaymentMethod($paymentNonce)
     {
-        $result = static::getBraintree()->createCustomerWithPaymentMethod(
-            $this->customer_firstName,
-            $this->customer_lastName,
-            $paymentNonce
+        static::getBraintree()->setOptions(
+            [
+                'customer' => [
+                    'firstName' => $this->customer_firstName,
+                    'lastName' => $this->customer_lastName,
+                    'paymentMethodNonce' => $paymentNonce,
+                ],
+            ]
         );
+        $result = static::getBraintree()->saveCustomer();
 
-        if ($result->success) {
-            return [
-                'status' => true,
-                'result' => $result,
-                'customerId' => $result->customer->id,
-                'paymentMethodToken' => $result->customer->paymentMethods[0]->token
-            ];
-        } else {
-            return ['status' => false, 'result' => $result];
+        if ($result['status']) {
+            $result['customerId'] = $result['result']->customer->id;
+            $result['paymentMethodToken'] = $result['result']->customer->paymentMethods[0]->token;
         }
+        return $result;
     }
 
+    /**
+     * @return \Braintree\Plan[]
+     */
     public static function getAllPlans()
     {
         return static::getBraintree()->getAllPlans();
     }
 
+    /**
+     * @return array
+     */
     public static function getPlanIds()
     {
         return static::getBraintree()->getPlanIds();
     }
 
+    /**
+     * @param string $planId
+     * @return \Braintree\Plan|null
+     */
     public static function getPlanById($planId)
     {
         return static::getBraintree()->getPlanById($planId);
     }
 
-    public function createSubscription($planId, $params=[])
+    /**
+     * @param string $planId
+     * @param array $params
+     * @return array
+     */
+    public function createSubscription($planId, $params = []) // todo planId needed? or planId as property?
     {
         $params = array_merge(['paymentMethodToken' => $this->paymentMethodToken, 'planId' => $planId], $params);
-        $result = static::getBraintree()->createSubscription($params);
+        $result = Subscription::create($params);
         if ($result->success) {
             return [
                 'status' => true,
                 'result' => $result,
-                'subscriptionId' => $result->subscription->id
+                'subscriptionId' => $result->subscription->id,
             ];
         } else {
             return ['status' => false, 'result' => $result];
         }
     }
 
+    /**
+     * @param string $idSubscription
+     * @return array
+     */
     public function findSubscription($idSubscription)
     {
         try {
-            $result = static::getBraintree()->findSubscription($idSubscription);
+            $result = Subscription::find($idSubscription);
             return [
-                    'status' => true,
-                    'result' => $result,
-                ];
-        } catch (Braintree_Exception_NotFound $e) {
-            $message = $e->getMessage();
+                'status' => true,
+                'result' => $result,
+            ];
+        } catch (NotFound $e) {
+            $message = $e->getMessage(); // todo probably useless
         } catch (\Exception $e) {
-            $message = $e->getMessage();
+            $message = $e->getMessage(); // todo check how it will be processed
         }
         return ['status' => false, 'result' => [], 'message' => $message];
+        // todo 'result' => [] strange solution, see others also
     }
 
+    /**
+     * @param string $idCustomer
+     * @return array
+     */
     public function findCustomer($idCustomer)
     {
         try {
@@ -390,20 +416,26 @@ class BraintreeForm extends Model
                 'status' => true,
                 'result' => $result,
                 'customerId' => $result->id,
-                'paymentMethodToken' => $result->paymentMethods[0]->token
+                'paymentMethodToken' => $result->paymentMethods[0]->token, // todo why 0?
             ];
-        } catch (Braintree_Exception_NotFound $e) {
-            $message = $e->getMessage();
+        } catch (NotFound $e) {
+            $message = $e->getMessage(); // todo probably useless
         } catch (\Exception $e) {
-            $message = $e->getMessage();
+            $message = $e->getMessage(); // todo check how it will be processed
         }
         return ['status' => false, 'result' => [], 'message' => $message];
     }
 
+    /**
+     * Update subscription.
+     * @param string $idSubscription
+     * @param array $params
+     * @return array
+     */
     public function updateSubscription($idSubscription, $params)
     {
         try {
-            $result = static::getBraintree()->updateSubscription($idSubscription, $params);
+            $result = Subscription::update($idSubscription, $params);
             if ($result->success) {
                 return [
                     'status' => true,
@@ -412,18 +444,23 @@ class BraintreeForm extends Model
             } else {
                 return ['status' => false, 'result' => $result];
             }
-        } catch (Braintree_Exception_NotFound $e) {
-            $message = $e->getMessage();
+        } catch (NotFound $e) {
+            $message = $e->getMessage(); // todo probably useless
         } catch (\Exception $e) {
-            $message = $e->getMessage();
+            $message = $e->getMessage(); // todo check how it will be processed
         }
         return ['status' => false, 'result' => [], 'message' => $message];
     }
 
+    /**
+     * Cancel subscription.
+     * @param string $idSubscription
+     * @return array
+     */
     public function cancelSubscription($idSubscription)
     {
         try {
-            $result = static::getBraintree()->cancelSubscription($idSubscription);
+            $result = Subscription::cancel($idSubscription);
             if ($result->success) {
                 return [
                     'status' => true,
@@ -432,14 +469,13 @@ class BraintreeForm extends Model
             } else {
                 return ['status' => false, 'result' => $result];
             }
-        } catch (Braintree_Exception_NotFound $e) {
-            $message = $e->getMessage();
+        } catch (NotFound $e) {
+            $message = $e->getMessage(); // todo probably useless
         } catch (\Exception $e) {
-            $message = $e->getMessage();
+            $message = $e->getMessage(); // todo check how it will be processed
         }
         return ['status' => false, 'result' => [], 'message' => $message];
     }
-
 
     /**
      * This add error from braintree response.
@@ -448,7 +484,6 @@ class BraintreeForm extends Model
     public function addErrorFromResponse($result)
     {
         $this->lastError = $result;
-        /** @var \Braintree\Error\ErrorCollection $errors */
         $errors = $result->errors;
         foreach ($errors->shallowAll() as $error) {
             $this->addError('creditCard_number', $error->message);
