@@ -11,7 +11,6 @@ use Braintree\CreditCard;
 use Braintree\Configuration;
 use Braintree\Customer;
 use Braintree\MerchantAccount;
-use Braintree\PaymentMethodNonce;
 use Braintree\PaymentMethod;
 use Braintree\Plan;
 use Braintree\Transaction;
@@ -104,28 +103,15 @@ class Braintree extends Component
         return $result;
     }
 
-    public function createPaymentMethodNonce($creditCardToken)
+    public function savePaymentMethod()
     {
-        return PaymentMethodNonce::create($creditCardToken);
-    }
-
-    public function createPaymentMethod($customerId, $paymentNonce, $options)
-    {
-        return PaymentMethod::create([
-            'customerId' => $customerId,
-            'paymentMethodNonce' => $paymentNonce,
-            'options' => $options
-        ]);
-    }
-
-    /**
-     * Finds transaction by id.
-     * @param string $id
-     * @return Transaction
-     */
-    public function findTransaction($id)
-    {
-        return Transaction::find($id);
+        $result = PaymentMethod::create($this->options['paymentMethod']);
+        
+        if ($result->success) {
+            return ['status' => true, 'result' => $result];
+        } else {
+            return ['status' => false, 'result' => $result];
+        }
     }
 
     /**
@@ -166,11 +152,6 @@ class Braintree extends Component
         } else {
             return ['status' => false, 'result' => $result];
         }
-    }
-
-    public function createCustomerCreditCard($params)
-    {
-        return CreditCard::create($params)->creditCard;
     }
 
     public function saveAddress()
@@ -214,6 +195,10 @@ class Braintree extends Component
         $this->options['creditCard'] = $creditCard;
     }
 
+    /**
+     * @param array $values
+     * @return $this
+     */
     public function setOptions($values)
     {
         if (!empty($values)) {
@@ -227,6 +212,7 @@ class Braintree extends Component
                 }
             }
         }
+        return $this;
     }
 
     /**
@@ -236,20 +222,6 @@ class Braintree extends Component
     public function setAmount($amount)
     {
         $this->options['amount'] = round($amount, 2);
-    }
-
-    public function createMerchant($individualParams, $businessParams, $fundingParams, $tosAccepted, $id = null)
-    {
-        $params = [
-            'individual' => $individualParams,
-            'business' => $businessParams,
-            'funding' => $fundingParams,
-            'tosAccepted' => $tosAccepted,
-            'masterMerchantAccountId' => "masterMerchantAccount",
-            'id' => $id,
-        ];
-
-        return MerchantAccount::create($params);
     }
 
     /**
@@ -286,6 +258,16 @@ class Braintree extends Component
             }
         }
         return null;
+    }
+
+    /**
+     * Finds transaction by id.
+     * @param string $id
+     * @return Transaction
+     */
+    public function findTransaction($id)
+    {
+        return Transaction::find($id);
     }
 
     /**

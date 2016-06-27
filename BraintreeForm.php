@@ -15,6 +15,7 @@ class BraintreeForm extends Model
     public $amount;
     public $orderId;
     public $paymentMethodToken;
+    public $planId;
 
     public $creditCard_number;
     public $creditCard_cvv;
@@ -228,41 +229,12 @@ class BraintreeForm extends Model
         }
     }
 
-    public function createCustomerCreditCard($customerId, $cardHolderName, $cardNumber, $cardExpirationDate)
-    {
-        $params = [
-            'customerId' => $customerId,
-            'cardholderName' => $cardHolderName,
-            'number' => $cardNumber,
-            'expirationDate' => $cardExpirationDate
-        ];
-        $return = static::getBraintree()->createCustomerCreditCard($params);
-        return $return;
-    }
-
     public function address()
     {
         $return = static::getBraintree()->saveAddress();
         if ($return['status'] === false) {
             $this->addErrorFromResponse($return['result']);
             return false;
-        } else {
-            return $return;
-        }
-    }
-
-    public function createMerchant($individualParams, $businessParams, $fundingParams, $tosAccepted, $id = null)
-    {
-        $return = static::getBraintree()->createMerchant(
-            $individualParams,
-            $businessParams,
-            $fundingParams,
-            $tosAccepted,
-            $id
-        );
-        if ($return->success === false) {
-            $response = ['status' => $return->success, 'message' => $return->message];
-            return $response;
         } else {
             return $return;
         }
@@ -304,32 +276,24 @@ class BraintreeForm extends Model
         }
     }
 
-    public function createPaymentMethodNonce($creditCardToken)
-    {
-        $result = static::getBraintree()->createPaymentMethodNonce($creditCardToken);
-        if ($result->paymentMethodNonce->nonce) {
-            return $result->paymentMethodNonce->nonce;
-        } else {
-            return $result;
-        }
-    }
-
     public function createPaymentMethod($customerId, $paymentNonce, $makeDefault = false, $options = [])
     {
         if ($makeDefault) {
-            $options = array_merge($options,['makeDefault' => $makeDefault]);
+            $options = array_merge($options, ['makeDefault' => $makeDefault]);
         }
-        $result = static::getBraintree()->createPaymentMethod($customerId, $paymentNonce, $options);
-        $status = false;
-        if ($result->success) {
-            $status = true;
-        } else {
-            $this->addErrorFromResponse($result);
+        $return = static::getBraintree()->setOptions(
+            [
+                'paymentMethod' => [
+                    'customerId' => $customerId,
+                    'paymentMethodNonce' => $paymentNonce,
+                    'options' => $options,
+                ],
+            ]
+        )->savePaymentMethod();
+        if ($return['status'] === false) {
+            $this->addErrorFromResponse($return['result']);
         }
-        return [
-            'status' => $status,
-            'result' => $result
-        ];
+        return $return;
     }
 
     /**
@@ -338,7 +302,7 @@ class BraintreeForm extends Model
      */
     public function createCustomerWithPaymentMethod($paymentNonce)
     {
-        static::getBraintree()->setOptions(
+        $result = static::getBraintree()->setOptions(
             [
                 'customer' => [
                     'firstName' => $this->customer_firstName,
@@ -346,8 +310,7 @@ class BraintreeForm extends Model
                     'paymentMethodNonce' => $paymentNonce,
                 ],
             ]
-        );
-        $result = static::getBraintree()->saveCustomer();
+        )->saveCustomer();
 
         if ($result['status']) {
             $result['customerId'] = $result['result']->customer->id;
@@ -382,13 +345,12 @@ class BraintreeForm extends Model
     }
 
     /**
-     * @param string $planId
      * @param array $params
      * @return array
      */
-    public function createSubscription($planId, $params = []) // todo planId needed? or planId as property?
+    public function createSubscription($params = [])
     {
-        $params = array_merge(['paymentMethodToken' => $this->paymentMethodToken, 'planId' => $planId], $params);
+        $params = array_merge(['paymentMethodToken' => $this->paymentMethodToken, 'planId' => $this->planId], $params);
         $result = Subscription::create($params);
         if ($result->success) {
             return [
@@ -414,12 +376,11 @@ class BraintreeForm extends Model
                 'result' => $result,
             ];
         } catch (NotFound $e) {
-            $message = $e->getMessage(); // todo probably useless
+            $message = $e->getMessage(); // todo
         } catch (\Exception $e) {
-            $message = $e->getMessage(); // todo check how it will be processed
+            $message = $e->getMessage(); // todo
         }
-        return ['status' => false, 'result' => [], 'message' => $message];
-        // todo 'result' => [] strange solution, see others also
+        return ['status' => false, 'result' => null, 'message' => $message];
     }
 
     /**
@@ -434,14 +395,14 @@ class BraintreeForm extends Model
                 'status' => true,
                 'result' => $result,
                 'customerId' => $result->id,
-                'paymentMethodToken' => $result->paymentMethods[0]->token, // todo why 0?
+                'paymentMethodToken' => $result->paymentMethods[0]->token, // todo is it reliable?
             ];
         } catch (NotFound $e) {
-            $message = $e->getMessage(); // todo probably useless
+            $message = $e->getMessage(); // todo
         } catch (\Exception $e) {
-            $message = $e->getMessage(); // todo check how it will be processed
+            $message = $e->getMessage(); // todo
         }
-        return ['status' => false, 'result' => [], 'message' => $message];
+        return ['status' => false, 'result' => null, 'message' => $message];
     }
 
     /**
@@ -463,11 +424,11 @@ class BraintreeForm extends Model
                 return ['status' => false, 'result' => $result];
             }
         } catch (NotFound $e) {
-            $message = $e->getMessage(); // todo probably useless
+            $message = $e->getMessage(); // todo
         } catch (\Exception $e) {
-            $message = $e->getMessage(); // todo check how it will be processed
+            $message = $e->getMessage(); // todo
         }
-        return ['status' => false, 'result' => [], 'message' => $message];
+        return ['status' => false, 'result' => null, 'message' => $message];
     }
 
     /**
@@ -488,11 +449,11 @@ class BraintreeForm extends Model
                 return ['status' => false, 'result' => $result];
             }
         } catch (NotFound $e) {
-            $message = $e->getMessage(); // todo probably useless
+            $message = $e->getMessage(); // todo
         } catch (\Exception $e) {
-            $message = $e->getMessage(); // todo check how it will be processed
+            $message = $e->getMessage(); // todo
         }
-        return ['status' => false, 'result' => [], 'message' => $message];
+        return ['status' => false, 'result' => null, 'message' => $message];
     }
 
     /**
