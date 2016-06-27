@@ -352,7 +352,7 @@ class BraintreeForm extends Model
     public function createSubscription($params = [])
     {
         $params = array_merge(['paymentMethodToken' => $this->paymentMethodToken, 'planId' => $this->planId], $params);
-        $result = Subscription::create($params);
+        $result = static::getBraintree()->createSubscription($params);
         if ($result->success) {
             return [
                 'status' => true,
@@ -371,13 +371,11 @@ class BraintreeForm extends Model
     public function findSubscription($idSubscription)
     {
         try {
-            $result = Subscription::find($idSubscription);
+            $result = static::getBraintree()->findSubscription($idSubscription);
             return [
                 'status' => true,
                 'result' => $result,
             ];
-        } catch (NotFound $e) {
-            $message = $e->getMessage(); // todo
         } catch (\Exception $e) {
             $message = $e->getMessage(); // todo
         }
@@ -396,10 +394,7 @@ class BraintreeForm extends Model
                 'status' => true,
                 'result' => $result,
                 'customerId' => $result->id,
-                'paymentMethodToken' => $result->paymentMethods[0]->token, // todo is it reliable?
             ];
-        } catch (NotFound $e) {
-            $message = $e->getMessage(); // todo
         } catch (\Exception $e) {
             $message = $e->getMessage(); // todo
         }
@@ -415,7 +410,7 @@ class BraintreeForm extends Model
     public function updateSubscription($idSubscription, $params)
     {
         try {
-            $result = Subscription::update($idSubscription, $params);
+            $result = static::getBraintree()->updateSubscription($idSubscription, $params);
             if ($result->success) {
                 return [
                     'status' => true,
@@ -424,8 +419,6 @@ class BraintreeForm extends Model
             } else {
                 return ['status' => false, 'result' => $result];
             }
-        } catch (NotFound $e) {
-            $message = $e->getMessage(); // todo
         } catch (\Exception $e) {
             $message = $e->getMessage(); // todo
         }
@@ -440,7 +433,7 @@ class BraintreeForm extends Model
     public function cancelSubscription($idSubscription)
     {
         try {
-            $result = Subscription::cancel($idSubscription);
+            $result = static::getBraintree()->cancelSubscription($idSubscription);
             if ($result->success) {
                 return [
                     'status' => true,
@@ -449,8 +442,6 @@ class BraintreeForm extends Model
             } else {
                 return ['status' => false, 'result' => $result];
             }
-        } catch (NotFound $e) {
-            $message = $e->getMessage(); // todo
         } catch (\Exception $e) {
             $message = $e->getMessage(); // todo
         }

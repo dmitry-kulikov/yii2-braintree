@@ -10,6 +10,7 @@ use Braintree\ClientToken;
 use Braintree\CreditCard;
 use Braintree\Configuration;
 use Braintree\Customer;
+use Braintree\Subscription;
 use Braintree\MerchantAccount;
 use Braintree\PaymentMethod;
 use Braintree\Plan;
@@ -286,5 +287,38 @@ class Braintree extends Component
     public function findCustomer($idCustomer)
     {
         return Customer::find($idCustomer);
+    }
+
+    /**
+     * Create subscription.
+     * @param array $params
+     */
+    public function createSubscription($params)
+    {
+        return Subscription::create($params);
+    }
+
+    public function findSubscription($idSubscription)
+    {
+        return Subscription::find($idSubscription);
+    }
+
+    /**
+     * Update subscription.
+     * @param string $idSubscription required
+     * @param array $params
+     */
+    public function updateSubscription($idSubscription, $params)
+    {
+        return Subscription::update($idSubscription, $params);
+    }
+
+    /**
+     * Cancel subscription.
+     * @param string $idSubscription required
+     */
+    public function cancelSubscription($idSubscription)
+    {
+        return Subscription::cancel($idSubscription);
     }
 }
