@@ -161,6 +161,19 @@ class BraintreeFormTest extends TestCase
         $this->assertInstanceOf('Braintree\MerchantAccount', $model->findMerchant($idMerchant));
     }
 
+    public function testFindSubscription()
+    {
+        $model = new BraintreeForm();
+        $this->assertEquals(
+            [
+                'status' => false,
+                'result' => null,
+                'message' => 'subscription with id subscription-does-not-exist not found',
+            ],
+            $model->findSubscription('subscription-does-not-exist')
+        );
+    }
+
     public function validCreditCardProvider()
     {
         return [

@@ -7,6 +7,7 @@ namespace tuyakhov\braintree;
 
 use Braintree\Exception;
 use Braintree\Exception\NotFound;
+use Braintree\Subscription;
 use Yii;
 use yii\base\Model;
 
