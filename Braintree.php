@@ -15,6 +15,7 @@ use Braintree\MerchantAccount;
 use Braintree\PaymentMethod;
 use Braintree\Plan;
 use Braintree\Transaction;
+use Braintree\WebhookNotification;
 use yii\base\Component;
 use yii\base\InvalidConfigException;
 use yii\helpers\ArrayHelper;
@@ -303,6 +304,11 @@ class Braintree extends Component
         return Subscription::find($idSubscription);
     }
 
+    public function searchSubscription($params = [])
+    {
+        return  Subscription::search($params);
+    }
+
     /**
      * Update subscription.
      * @param string $idSubscription required
@@ -320,5 +326,10 @@ class Braintree extends Component
     public function cancelSubscription($idSubscription)
     {
         return Subscription::cancel($idSubscription);
+    }
+
+    public function parseWebhookNotification($signature, $payload)
+    {
+        return WebhookNotification::parse($signature, $payload);
     }
 }

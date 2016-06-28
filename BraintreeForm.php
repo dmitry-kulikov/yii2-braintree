@@ -448,6 +448,16 @@ class BraintreeForm extends Model
         return ['status' => false, 'result' => null, 'message' => $message];
     }
 
+    public function searchSubscription($params = [])
+    {
+        return static::getBraintree()->searchSubscription($params);
+    }
+
+    public function parseWebhookNotification($signature, $payload)
+    {
+        return static::getBraintree()->parseWebhookNotification($signature, $payload);
+    }
+
     /**
      * This add error from braintree response.
      * @param $result \Braintree\Result\Error
