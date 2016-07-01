@@ -452,7 +452,7 @@ class BraintreeForm extends Model
 
     public function retryChargeSubscription($idSubscription, $amount)
     {
-       $retryResult = static::getBraintree()->retryChargeSubscription($idSubscription, $amount);
+        $retryResult = static::getBraintree()->retryChargeSubscription($idSubscription, $amount);
         if (!$retryResult->success) {
             $this->addErrorFromResponse($retryResult);
             return false;

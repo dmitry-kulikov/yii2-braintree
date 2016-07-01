@@ -333,19 +333,14 @@ class Braintree extends Component
 
     public function retryChargeSubscription($idSubscription, $amount)
     {
-       $retryResult = Subscription::retryCharge(
-            $idSubscription,
-            $amount
-       );
+        $retryResult = Subscription::retryCharge($idSubscription, $amount);
 
-       if ($retryResult->success) {
-            $result = Transaction::submitForSettlement(
-                $retryResult->transaction->id
-            );
+        if ($retryResult->success) {
+            $result = Transaction::submitForSettlement($retryResult->transaction->id);
             return $result;
-       }
+        }
 
-       return $retryResult;
+        return $retryResult;
     }
 
     public function parseWebhookNotification($signature, $payload)
