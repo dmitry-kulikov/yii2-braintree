@@ -453,6 +453,17 @@ class BraintreeForm extends Model
         return static::getBraintree()->searchSubscription($params);
     }
 
+    public function retryChargeSubscription($idSubscription, $amount)
+    {
+       $retryResult = static::getBraintree()->retryChargeSubscription($idSubscription, $amount);
+        if (!$retryResult->success) {
+            $this->addErrorFromResponse($retryResult);
+            return false;
+        } else {
+            return $retryResult;
+        }
+    }
+
     public function parseWebhookNotification($signature, $payload)
     {
         return static::getBraintree()->parseWebhookNotification($signature, $payload);
