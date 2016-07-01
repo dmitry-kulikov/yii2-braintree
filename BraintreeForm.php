@@ -6,7 +6,6 @@
 namespace tuyakhov\braintree;
 
 use Braintree\Exception;
-use Braintree\Exception\NotFound;
 use Braintree\Subscription;
 use Yii;
 use yii\base\Model;
@@ -357,7 +356,6 @@ class BraintreeForm extends Model
             return [
                 'status' => true,
                 'result' => $result,
-                'subscriptionId' => $result->subscription->id,
             ];
         } else {
             return ['status' => false, 'result' => $result];
@@ -393,7 +391,6 @@ class BraintreeForm extends Model
             return [
                 'status' => true,
                 'result' => $result,
-                'customerId' => $result->id,
             ];
         } catch (\Exception $e) {
             $message = $e->getMessage(); // todo

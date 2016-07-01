@@ -7,13 +7,13 @@ namespace tuyakhov\braintree;
 
 use Braintree\Address;
 use Braintree\ClientToken;
-use Braintree\CreditCard;
 use Braintree\Configuration;
+use Braintree\CreditCard;
 use Braintree\Customer;
-use Braintree\Subscription;
 use Braintree\MerchantAccount;
 use Braintree\PaymentMethod;
 use Braintree\Plan;
+use Braintree\Subscription;
 use Braintree\Transaction;
 use Braintree\WebhookNotification;
 use yii\base\Component;
@@ -108,7 +108,7 @@ class Braintree extends Component
     public function savePaymentMethod()
     {
         $result = PaymentMethod::create($this->options['paymentMethod']);
-        
+
         if ($result->success) {
             return ['status' => true, 'result' => $result];
         } else {
@@ -293,6 +293,7 @@ class Braintree extends Component
     /**
      * Create subscription.
      * @param array $params
+     * @return \Braintree\Result\Error|\Braintree\Result\Successful
      */
     public function createSubscription($params)
     {
@@ -306,13 +307,14 @@ class Braintree extends Component
 
     public function searchSubscription($params = [])
     {
-        return  Subscription::search($params);
+        return Subscription::search($params);
     }
 
     /**
      * Update subscription.
-     * @param string $idSubscription required
+     * @param string $idSubscription
      * @param array $params
+     * @return \Braintree\Result\Error|\Braintree\Result\Successful
      */
     public function updateSubscription($idSubscription, $params)
     {
@@ -321,7 +323,8 @@ class Braintree extends Component
 
     /**
      * Cancel subscription.
-     * @param string $idSubscription required
+     * @param string $idSubscription
+     * @return \Braintree\Result\Error|\Braintree\Result\Successful
      */
     public function cancelSubscription($idSubscription)
     {
