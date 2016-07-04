@@ -26,7 +26,7 @@ class Braintree extends Component
     public $merchantId;
     public $publicKey;
     public $privateKey;
-    public $clientSideKey;
+    protected $clientToken;
 
     protected $options;
 
@@ -50,8 +50,15 @@ class Braintree extends Component
             }
             Configuration::$attribute($this->$attribute);
         }
-        $this->clientSideKey = ClientToken::generate();
         parent::init();
+    }
+
+    public function getClientToken($params = [])
+    {
+        if (!isset($this->clientToken)) {
+            $this->clientToken = ClientToken::generate($params);
+        }
+        return $this->clientToken;
     }
 
     /**
