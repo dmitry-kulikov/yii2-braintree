@@ -26,8 +26,8 @@ class Braintree extends Component
     public $merchantId;
     public $publicKey;
     public $privateKey;
-    protected $clientToken;
 
+    protected $clientToken;
     protected $options;
 
     /**
