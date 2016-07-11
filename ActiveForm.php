@@ -15,11 +15,7 @@ class ActiveForm extends \yii\bootstrap\ActiveForm
     public function init()
     {
         parent::init();
-        $id = $this->options['id'];
-        $clientSideKey = Yii::$app->get('braintree')->clientSideKey;
-        $view = $this->getView();
-        BraintreeAsset::register($view);
-        $view->registerJs("braintree.setup('$clientSideKey', 'custom', {id: '$id'});");
+        BraintreeAsset::register($this->getView());
         $this->fieldClass = ActiveField::className();
     }
 }
