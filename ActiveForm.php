@@ -5,8 +5,6 @@
 
 namespace tuyakhov\braintree;
 
-use Yii;
-
 class ActiveForm extends \yii\bootstrap\ActiveForm
 {
     /**
