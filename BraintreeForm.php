@@ -296,6 +296,53 @@ class BraintreeForm extends Model
         return $return;
     }
 
+    public function deletePaymentMethod($paymentMethodToken)
+    {
+        $return = static::getBraintree()->setOptions(
+            [
+                'paymentMethodToken' => $paymentMethodToken
+            ]
+        )->deletePaymentMethod();
+        if ($return['status'] === false) {
+            $this->addErrorFromResponse($return['result']);
+        }
+        return $return;
+    }
+
+    /**
+     * @param string $paymentMethodToken
+     * @param array $params
+     * example:
+     * 'billingAddress' => [
+     *      'firstName' => 'Drew',
+     *      'lastName' => 'Smith',
+     *       'company' => 'Smith Co.',
+     *       'streetAddress' => '1 E Main St',
+     *       'region' => 'IL',
+     *       'postalCode' => '60622'
+     *   ]
+     * @param array $options
+     * example:
+     * 'makeDefault' => true
+     * 'verifyCard' => true
+     * @return array
+     */
+
+    public function updatePaymentMethod($paymentMethodToken, $params = [], $options = [])
+    {
+        $attributesUpdate = array_merge($params,['options' => $options]);
+        $return = static::getBraintree()->setOptions(
+            [
+                'paymentMethodToken' => $paymentMethodToken,
+                'attributesUpdate' => $attributesUpdate
+            ]
+        )->updatePaymentMethod();
+        if ($return['status'] === false) {
+            $this->addErrorFromResponse($return['result']);
+        }
+        return $return;
+    }
+
     /**
      * @param string $paymentNonce
      * @return array

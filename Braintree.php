@@ -123,6 +123,26 @@ class Braintree extends Component
         }
     }
 
+    public function updatePaymentMethod()
+    {
+        $result = PaymentMethod::update($this->options['paymentMethodToken'], $this->options['attributesUpdate']);
+        if ($result->success) {
+            return ['status' => true, 'result' => $result];
+        } else {
+            return ['status' => false, 'result' => $result];
+        }
+    }
+
+    public function deletePaymentMethod()
+    {
+        $result = PaymentMethod::delete($this->options['paymentMethodToken']);
+        if ($result->success) {
+            return ['status' => true, 'result' => $result];
+        } else {
+            return ['status' => false, 'result' => $result];
+        }
+    }
+
     /**
      * This save customer to braintree and returns result array.
      * @return array
