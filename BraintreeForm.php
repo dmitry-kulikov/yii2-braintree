@@ -298,7 +298,7 @@ class BraintreeForm extends Model
     {
         $return = static::getBraintree()->setOptions(
             [
-                'paymentMethodToken' => $paymentMethodToken
+                'paymentMethodToken' => $paymentMethodToken,
             ]
         )->deletePaymentMethod();
         if ($return['status'] === false) {
@@ -311,28 +311,31 @@ class BraintreeForm extends Model
      * @param string $paymentMethodToken
      * @param array $params
      * example:
-     * 'billingAddress' => [
-     *      'firstName' => 'Drew',
-     *      'lastName' => 'Smith',
-     *       'company' => 'Smith Co.',
-     *       'streetAddress' => '1 E Main St',
-     *       'region' => 'IL',
-     *       'postalCode' => '60622'
-     *   ]
+     * [
+     *     'billingAddress' => [
+     *         'firstName' => 'Drew',
+     *         'lastName' => 'Smith',
+     *         'company' => 'Smith Co.',
+     *         'streetAddress' => '1 E Main St',
+     *         'region' => 'IL',
+     *         'postalCode' => '60622',
+     *     ],
+     * ]
      * @param array $options
      * example:
-     * 'makeDefault' => true
-     * 'verifyCard' => true
+     * [
+     *     'makeDefault' => true,
+     *     'verifyCard' => true,
+     * ]
      * @return array
      */
-
     public function updatePaymentMethod($paymentMethodToken, $params = [], $options = [])
     {
-        $attributesUpdate = array_merge($params,['options' => $options]);
+        $paymentMethodOptions = array_merge($params, ['options' => $options]);
         $return = static::getBraintree()->setOptions(
             [
                 'paymentMethodToken' => $paymentMethodToken,
-                'attributesUpdate' => $attributesUpdate
+                'paymentMethod' => $paymentMethodOptions,
             ]
         )->updatePaymentMethod();
         if ($return['status'] === false) {
@@ -409,28 +412,20 @@ class BraintreeForm extends Model
 
     /**
      * @param string $idSubscription
-     * @return array
+     * @return \Braintree\Subscription
      */
     public function findSubscription($idSubscription)
     {
-            $result = static::getBraintree()->findSubscription($idSubscription);
-            return [
-                'status' => true,
-                'result' => $result,
-            ];
+        return static::getBraintree()->findSubscription($idSubscription);
     }
 
     /**
      * @param string $idCustomer
-     * @return array
+     * @return \Braintree\Customer
      */
     public function findCustomer($idCustomer)
     {
-        $result = static::getBraintree()->findCustomer($idCustomer);
-        return [
-            'status' => true,
-            'result' => $result,
-        ];
+        return static::getBraintree()->findCustomer($idCustomer);
     }
 
     /**
@@ -462,8 +457,8 @@ class BraintreeForm extends Model
         $result = static::getBraintree()->cancelSubscription($idSubscription);
         if ($result->success) {
             return [
-                    'status' => true,
-                    'result' => $result,
+                'status' => true,
+                'result' => $result,
             ];
         } else {
             return ['status' => false, 'result' => $result];
