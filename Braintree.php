@@ -125,7 +125,8 @@ class Braintree extends Component
 
     public function updatePaymentMethod()
     {
-        $result = PaymentMethod::update($this->options['paymentMethodToken'], $this->options['attributesUpdate']);
+        $result = PaymentMethod::update($this->options['paymentMethodToken'], $this->options['paymentMethod']);
+
         if ($result->success) {
             return ['status' => true, 'result' => $result];
         } else {
@@ -136,6 +137,7 @@ class Braintree extends Component
     public function deletePaymentMethod()
     {
         $result = PaymentMethod::delete($this->options['paymentMethodToken']);
+
         if ($result->success) {
             return ['status' => true, 'result' => $result];
         } else {
