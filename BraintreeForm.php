@@ -5,8 +5,6 @@
 
 namespace tuyakhov\braintree;
 
-use Braintree\Exception;
-use Braintree\Subscription;
 use Yii;
 use yii\base\Model;
 
