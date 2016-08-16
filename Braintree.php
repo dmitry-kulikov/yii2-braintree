@@ -31,6 +31,11 @@ class Braintree extends Component
     protected $options;
 
     /**
+     * @var Plan[] cached plans from Braintree
+     */
+    protected $plans;
+
+    /**
      * Sets up Braintree configuration from config file.
      * @throws \yii\base\InvalidConfigException
      */
@@ -256,19 +261,36 @@ class Braintree extends Component
     }
 
     /**
+     * @param boolean $allowCaching whether to allow caching the result of retrieving of data from Braintree;
+     * when this parameter is true (default), if data was retrieved before,
+     * result will be directly returned when calling this method;
+     * if this parameter is false, this method will always perform request to Braintree to obtain the up-to-date data;
+     * note that this caching is effective only within the same HTTP request
      * @return Plan[]
      */
-    public static function getAllPlans()
+    public function getAllPlans($allowCaching = true)
     {
-        return Plan::all();
+        if (!$allowCaching) {
+            return Plan::all();
+        }
+
+        if (!isset($this->plans)) {
+            $this->plans = Plan::all();
+        }
+        return $this->plans;
     }
 
     /**
+     * @param boolean $allowCaching whether to allow caching the result of retrieving of data from Braintree;
+     * when this parameter is true (default), if data was retrieved before,
+     * result will be directly returned when calling this method;
+     * if this parameter is false, this method will always perform request to Braintree to obtain the up-to-date data;
+     * note that this caching is effective only within the same HTTP request
      * @return array
      */
-    public static function getPlanIds()
+    public function getPlanIds($allowCaching = true)
     {
-        $plans = static::getAllPlans();
+        $plans = $this->getAllPlans($allowCaching);
         $planIds = [];
         foreach ($plans as $plan) {
             $planIds[] = $plan->id;
@@ -278,11 +300,16 @@ class Braintree extends Component
 
     /**
      * @param string $planId
+     * @param boolean $allowCaching whether to allow caching the result of retrieving of data from Braintree;
+     * when this parameter is true (default), if data was retrieved before,
+     * result will be directly returned when calling this method;
+     * if this parameter is false, this method will always perform request to Braintree to obtain the up-to-date data;
+     * note that this caching is effective only within the same HTTP request
      * @return Plan|null
      */
-    public static function getPlanById($planId)
+    public function getPlanById($planId, $allowCaching = true)
     {
-        $plans = static::getAllPlans();
+        $plans = $this->getAllPlans($allowCaching);
         foreach ($plans as $plan) {
             if ($plan->id == $planId) {
                 return $plan;

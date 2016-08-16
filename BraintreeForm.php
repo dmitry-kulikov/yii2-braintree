@@ -368,28 +368,43 @@ class BraintreeForm extends Model
     }
 
     /**
+     * @param boolean $allowCaching whether to allow caching the result of retrieving of data from Braintree;
+     * when this parameter is true (default), if data was retrieved before,
+     * result will be directly returned when calling this method;
+     * if this parameter is false, this method will always perform request to Braintree to obtain the up-to-date data;
+     * note that this caching is effective only within the same HTTP request
      * @return \Braintree\Plan[]
      */
-    public static function getAllPlans()
+    public static function getAllPlans($allowCaching = true)
     {
-        return static::getBraintree()->getAllPlans();
+        return static::getBraintree()->getAllPlans($allowCaching);
     }
 
     /**
+     * @param boolean $allowCaching whether to allow caching the result of retrieving of data from Braintree;
+     * when this parameter is true (default), if data was retrieved before,
+     * result will be directly returned when calling this method;
+     * if this parameter is false, this method will always perform request to Braintree to obtain the up-to-date data;
+     * note that this caching is effective only within the same HTTP request
      * @return array
      */
-    public static function getPlanIds()
+    public static function getPlanIds($allowCaching = true)
     {
-        return static::getBraintree()->getPlanIds();
+        return static::getBraintree()->getPlanIds($allowCaching);
     }
 
     /**
      * @param string $planId
+     * @param boolean $allowCaching whether to allow caching the result of retrieving of data from Braintree;
+     * when this parameter is true (default), if data was retrieved before,
+     * result will be directly returned when calling this method;
+     * if this parameter is false, this method will always perform request to Braintree to obtain the up-to-date data;
+     * note that this caching is effective only within the same HTTP request
      * @return \Braintree\Plan|null
      */
-    public static function getPlanById($planId)
+    public static function getPlanById($planId, $allowCaching = true)
     {
-        return static::getBraintree()->getPlanById($planId);
+        return static::getBraintree()->getPlanById($planId, $allowCaching);
     }
 
     /**
