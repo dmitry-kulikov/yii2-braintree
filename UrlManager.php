@@ -29,7 +29,9 @@ class UrlManager
             $braintree = Yii::$app->get('braintree');
             $domain = 'braintreegateway.com';
             if ($braintree->environment == 'sandbox') {
-                $domain = "$braintree->environment.$domain";
+                $domain = "sandbox.$domain";
+            } else {
+                $domain = "www.$domain";
             }
             $this->baseUrl = "https://$domain/merchants/$braintree->merchantId/";
         }
