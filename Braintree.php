@@ -20,6 +20,12 @@ use yii\base\Component;
 use yii\base\InvalidConfigException;
 use yii\helpers\ArrayHelper;
 
+/**
+ * Class Braintree.
+ * @package tuyakhov\braintree
+ *
+ * @property UrlManager $urlManager provides methods for creating of urls to Braintree; this property is read-only
+ */
 class Braintree extends Component
 {
     public $environment = 'sandbox';
@@ -29,6 +35,11 @@ class Braintree extends Component
 
     protected $clientToken;
     protected $options;
+
+    /**
+     * @var UrlManager
+     */
+    protected $urlManager;
 
     /**
      * @var Plan[] cached plans from Braintree
@@ -56,6 +67,19 @@ class Braintree extends Component
             Configuration::$attribute($this->$attribute);
         }
         parent::init();
+    }
+
+    /**
+     * Returns the url manager object.
+     * @return UrlManager
+     */
+    public function getUrlManager()
+    {
+        if (!isset($this->urlManager)) {
+            $this->urlManager = new UrlManager;
+        }
+
+        return $this->urlManager;
     }
 
     public function getClientToken($params = [])
@@ -329,12 +353,12 @@ class Braintree extends Component
     }
 
     /**
-     * @param string $idMerchant
+     * @param string $merchantId
      * @return MerchantAccount
      */
-    public function findMerchant($idMerchant)
+    public function findMerchant($merchantId)
     {
-        return MerchantAccount::find($idMerchant);
+        return MerchantAccount::find($merchantId);
     }
 
     /**
@@ -356,9 +380,9 @@ class Braintree extends Component
         return Subscription::create($params);
     }
 
-    public function findSubscription($idSubscription)
+    public function findSubscription($subscriptionId)
     {
-        return Subscription::find($idSubscription);
+        return Subscription::find($subscriptionId);
     }
 
     public function searchSubscription($params = [])
@@ -368,28 +392,28 @@ class Braintree extends Component
 
     /**
      * Update subscription.
-     * @param string $idSubscription
+     * @param string $subscriptionId
      * @param array $params
      * @return \Braintree\Result\Error|\Braintree\Result\Successful
      */
-    public function updateSubscription($idSubscription, $params)
+    public function updateSubscription($subscriptionId, $params)
     {
-        return Subscription::update($idSubscription, $params);
+        return Subscription::update($subscriptionId, $params);
     }
 
     /**
      * Cancel subscription.
-     * @param string $idSubscription
+     * @param string $subscriptionId
      * @return \Braintree\Result\Error|\Braintree\Result\Successful
      */
-    public function cancelSubscription($idSubscription)
+    public function cancelSubscription($subscriptionId)
     {
-        return Subscription::cancel($idSubscription);
+        return Subscription::cancel($subscriptionId);
     }
 
-    public function retryChargeSubscription($idSubscription, $amount)
+    public function retryChargeSubscription($subscriptionId, $amount)
     {
-        $retryResult = Subscription::retryCharge($idSubscription, $amount);
+        $retryResult = Subscription::retryCharge($subscriptionId, $amount);
 
         if ($retryResult->success) {
             $result = Transaction::submitForSettlement($retryResult->transaction->id);
