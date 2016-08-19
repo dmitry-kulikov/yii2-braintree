@@ -153,12 +153,12 @@ class BraintreeFormTest extends TestCase
 
     public function testFindMerchant()
     {
-        $idMerchant = ArrayHelper::getValue(Yii::$app->params, 'merchant_account_id');
-        if (!isset($idMerchant)) {
+        $merchantId = ArrayHelper::getValue(Yii::$app->params, 'merchant_account_id');
+        if (!isset($merchantId)) {
             $this->markTestSkipped('Valid "merchant_account_id" should be specified in tests/config/params-local.php.');
         }
         $model = new BraintreeForm();
-        $this->assertInstanceOf('Braintree\MerchantAccount', $model->findMerchant($idMerchant));
+        $this->assertInstanceOf('Braintree\MerchantAccount', $model->findMerchant($merchantId));
     }
 
     public function testSearchSubscription()

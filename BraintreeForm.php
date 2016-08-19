@@ -239,12 +239,12 @@ class BraintreeForm extends Model
     }
 
     /**
-     * @param string $idMerchant
+     * @param string $merchantId
      * @return \Braintree\MerchantAccount
      */
-    public function findMerchant($idMerchant)
+    public function findMerchant($merchantId)
     {
-        return static::getBraintree()->findMerchant($idMerchant);
+        return static::getBraintree()->findMerchant($merchantId);
     }
 
     public function saleWithServiceFee($merchantAccountId, $amount, $paymentMethodNonce, $serviceFeeAmount)
@@ -426,12 +426,12 @@ class BraintreeForm extends Model
     }
 
     /**
-     * @param string $idSubscription
+     * @param string $subscriptionId
      * @return \Braintree\Subscription
      */
-    public function findSubscription($idSubscription)
+    public function findSubscription($subscriptionId)
     {
-        return static::getBraintree()->findSubscription($idSubscription);
+        return static::getBraintree()->findSubscription($subscriptionId);
     }
 
     /**
@@ -445,13 +445,13 @@ class BraintreeForm extends Model
 
     /**
      * Update subscription.
-     * @param string $idSubscription
+     * @param string $subscriptionId
      * @param array $params
      * @return array
      */
-    public function updateSubscription($idSubscription, $params)
+    public function updateSubscription($subscriptionId, $params)
     {
-        $result = static::getBraintree()->updateSubscription($idSubscription, $params);
+        $result = static::getBraintree()->updateSubscription($subscriptionId, $params);
         if ($result->success) {
             return [
                 'status' => true,
@@ -464,12 +464,12 @@ class BraintreeForm extends Model
 
     /**
      * Cancel subscription.
-     * @param string $idSubscription
+     * @param string $subscriptionId
      * @return array
      */
-    public function cancelSubscription($idSubscription)
+    public function cancelSubscription($subscriptionId)
     {
-        $result = static::getBraintree()->cancelSubscription($idSubscription);
+        $result = static::getBraintree()->cancelSubscription($subscriptionId);
         if ($result->success) {
             return [
                 'status' => true,
@@ -485,9 +485,9 @@ class BraintreeForm extends Model
         return static::getBraintree()->searchSubscription($params);
     }
 
-    public function retryChargeSubscription($idSubscription, $amount)
+    public function retryChargeSubscription($subscriptionId, $amount)
     {
-        $retryResult = static::getBraintree()->retryChargeSubscription($idSubscription, $amount);
+        $retryResult = static::getBraintree()->retryChargeSubscription($subscriptionId, $amount);
         if (!$retryResult->success) {
             $this->addErrorFromResponse($retryResult);
             return false;
