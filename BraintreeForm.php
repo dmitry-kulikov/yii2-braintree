@@ -356,6 +356,11 @@ class BraintreeForm extends Model
                     'firstName' => $this->customer_firstName,
                     'lastName' => $this->customer_lastName,
                     'paymentMethodNonce' => $paymentNonce,
+                    'creditCard' => [
+                        'options' => [
+                            'verifyCard' => true
+                        ]
+                    ]
                 ],
             ]
         )->saveCustomer();
