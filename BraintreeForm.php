@@ -346,9 +346,14 @@ class BraintreeForm extends Model
 
     /**
      * @param string $paymentNonce
+     * @param array $options credit card options
+     * example:
+     * [
+     *     'verifyCard' => true,
+     * ]
      * @return array
      */
-    public function createCustomerWithPaymentMethod($paymentNonce)
+    public function createCustomerWithPaymentMethod($paymentNonce, $options = [])
     {
         $result = static::getBraintree()->setOptions(
             [
@@ -356,11 +361,7 @@ class BraintreeForm extends Model
                     'firstName' => $this->customer_firstName,
                     'lastName' => $this->customer_lastName,
                     'paymentMethodNonce' => $paymentNonce,
-                    'creditCard' => [
-                        'options' => [
-                            'verifyCard' => true
-                        ]
-                    ]
+                    'creditCard' => ['options' => $options],
                 ],
             ]
         )->saveCustomer();
