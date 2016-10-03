@@ -507,6 +507,11 @@ class BraintreeForm extends Model
         return static::getBraintree()->parseWebhookNotification($signature, $payload);
     }
 
+    public function searchTransaction($params = [])
+    {
+        return static::getBraintree()->searchTransaction($params);
+    }
+
     /**
      * This add error from braintree response.
      * @param $result \Braintree\Result\Error

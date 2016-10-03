@@ -390,6 +390,11 @@ class Braintree extends Component
         return Subscription::search($params);
     }
 
+    public function searchTransaction($params = [])
+    {
+        return Transaction::search($params);
+    }
+
     /**
      * Update subscription.
      * @param string $subscriptionId
